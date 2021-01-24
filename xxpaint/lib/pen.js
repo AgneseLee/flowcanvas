@@ -1,5 +1,6 @@
 import Downloader from './downloader';
-import TreeNode from './treeNode'
+// import TreeNode from './treeNode'
+import {initVnodeTree} from './vnode'
 import { breadthFirstSearchRight, breadthFirstSearch } from './util'
 const GD = require('./gradient.js');
 const Modifier = require('./modifier').default;
@@ -72,8 +73,9 @@ export default class Painter {
     // this.data = tplTo1;
 
     // this.calcEachHeight(tplTo1.views);
-
+    initVnodeTree(this.data)
     const tplTo1 = this.data
+
     // 关联父子兄弟节点和样式继承
     this.connectChildren(tplTo1)
 

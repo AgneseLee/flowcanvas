@@ -1,6 +1,3 @@
-
-
-
 export default class ImageExample {
     palette({
         
@@ -201,18 +198,18 @@ export default class ImageExample {
                             
                         ]
                     },
-                    // {
-                    //     type: 'image',
-                    //     url: image,
-                    //     css: {
-                    //         width: '350px',
-                    //         height: '350px',
-                    //         mode: 'aspectFill',
-                    //         borderRadius: '0px',
-                    //         marginTop:'10px',
+                    { 
+                        type: 'image',
+                        url: image,
+                        css: {
+                            width: '350px',
+                            height: '350px',
+                            mode: 'aspectFill',
+                            borderRadius: '0px',
+                            marginTop:'10px',
                       
-                    //     },
-                    // },
+                        },
+                    },
                     {
                         type: 'text',
                         "text": '子节点2',
