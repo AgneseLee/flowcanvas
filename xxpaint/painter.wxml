@@ -1,0 +1,5 @@
+<view class="paint-body" style="{{painterBodyStyle}}">
+    <canvas wx:if="{{caniuse}}" type="2d" id="canvasp" canvas-id="k-canvas" style="{{painterStyle}}" />
+    <canvas wx:else id="canvasp" canvas-id="k-canvas" style="{{painterStyle}}" />
+    <image src='{{outputPic}}' class='generatedImage' bindload='loadImage' binderror='loadError' style="{{setImgScreenWidth}}" mode="widthFix" ></image>
+</view>

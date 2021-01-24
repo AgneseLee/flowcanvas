@@ -1,0 +1,5 @@
+<!--index.wxml-->
+<view class="container">
+ 
+      <painter class="painting" palette="{{paintPallette}}"  bind:imgOK="onImgOK" />
+</view>
