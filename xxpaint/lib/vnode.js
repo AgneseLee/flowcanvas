@@ -30,7 +30,7 @@ export const connectChildren = (el, isRoot = true) => {
     if (hasChildren(el)) {
         _getChildren(el).forEach((child, index) => {
             // 继承父节点样式
-            child.css = inheritStyle(el, child)
+            child.css = _inheritStyle(el, child)
 
             // 设置parent
             _setParent(child, el, isRoot)
@@ -92,7 +92,7 @@ function _setSibling(curr, pre, next) {
  * @param {vnode} parent 
  * @param {vnode} child 
  */
-function inheritStyle(parent, child) {
+function _inheritStyle(parent, child) {
     const copyParentCss = JSON.parse(JSON.stringify(parent.css))
     const notInheritStyleOfParent = ['margin', 'padding', 'marginTop', 'marginLeft', 'marginBottom', 'marginRight', 'paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom']
     for (const cssName of copyParentCss) {

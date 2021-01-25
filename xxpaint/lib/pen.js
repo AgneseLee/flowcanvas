@@ -1,10 +1,11 @@
 import Downloader from './downloader';
 // import TreeNode from './treeNode'
-import {initVnodeTree} from './vnode'
 import { breadthFirstSearchRight, breadthFirstSearch } from './util'
 const GD = require('./gradient.js');
-const Modifier = require('./modifier').default;
-const downloader = new Downloader();
+// const Modifier = require('./modifier').default;
+// const downloader = new Downloader();
+import {initVnodeTree, connectChildren} from './vnode'
+
 const defaultPaddingMargin = {
   paddingTop: 0,
   paddingBottom: 0,
@@ -15,6 +16,7 @@ const defaultPaddingMargin = {
   marginTop: 0,
   marginBottom: 0,
 }
+
 
 export default class Painter {
   constructor(ctx, data) {
@@ -77,7 +79,7 @@ export default class Painter {
     const tplTo1 = this.data
 
     // 关联父子兄弟节点和样式继承
-    this.connectChildren(tplTo1)
+    // this.connectChildren(tplTo1)
 
     // 计算每个节点的宽高
     this.calcElementWidthHeight(tplTo1.children[0])
@@ -150,6 +152,7 @@ export default class Painter {
     for (let i = 0; i < bfsNodes.length; i++) {
       const parent = bfsNodes[i].parent
       const { paddingLeft, marginLeft, paddingTop, marginTop } = Object.assign({}, defaultPaddingMargin, bfsNodes[i].css)
+      // debugger
       if (!parent) {
         bfsNodes[i].renderStyle = {
           x: 0,
