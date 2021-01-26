@@ -4,8 +4,12 @@ import { breadthFirstSearchRight, breadthFirstSearch } from './util'
 const GD = require('./gradient.js');
 // const Modifier = require('./modifier').default;
 // const downloader = new Downloader();
-import {initVnodeTree, connectChildren} from './vnode'
+import { initVnodeTree } from './vnode'
 
+const formatToPx = (v) => {
+  const res = v===0? v: v.toPx()
+  return +res;
+}
 const defaultPaddingMargin = {
   paddingTop: 0,
   paddingBottom: 0,
@@ -78,22 +82,18 @@ export default class Painter {
     initVnodeTree(this.data)
     const tplTo1 = this.data
 
-    // 关联父子兄弟节点和样式继承
-    // this.connectChildren(tplTo1)
-
+    
     // 计算每个节点的宽高
     this.calcElementWidthHeight(tplTo1.children[0])
 
     // 计算每个节点位置
     const nodes = this.calcElementPosition(tplTo1.children[0])
-
     this.data.views = nodes
 
   }
 
   calcElementWidthHeight(rootNode) {
     const reverseBfsNodes = breadthFirstSearchRight(rootNode)
-
     for (let i = 0; i < reverseBfsNodes.length; i++) {
       this.preProcessObj(reverseBfsNodes[i]);
       // inline-block宽高靠子节点撑大
@@ -152,13 +152,12 @@ export default class Painter {
     for (let i = 0; i < bfsNodes.length; i++) {
       const parent = bfsNodes[i].parent
       const { paddingLeft, marginLeft, paddingTop, marginTop } = Object.assign({}, defaultPaddingMargin, bfsNodes[i].css)
-      // debugger
       if (!parent) {
         bfsNodes[i].renderStyle = {
           x: 0,
           y: 0,
-          contentX: paddingLeft + marginLeft,
-          contentY: paddingTop + marginTop
+          contentX: formatToPx(paddingLeft) + formatToPx(marginLeft),
+          contentY: formatToPx(paddingTop) + formatToPx(marginTop)
         }
         continue;
       }
@@ -172,8 +171,8 @@ export default class Painter {
         const renderStyle = {
           x,
           y,
-          contentX: x + (paddingLeft === 0 ? 0 : paddingLeft.toPx()) + (marginLeft === 0 ? 0 : marginLeft.toPx()),
-          contentY: y + (paddingTop === 0 ? 0 : paddingTop.toPx()) + (marginTop === 0 ? 0 : marginTop.toPx())
+          contentX: x + formatToPx(paddingLeft) + formatToPx(marginLeft),
+          contentY: y + formatToPx(paddingTop) + formatToPx(marginTop)
         }
         // debugger
         bfsNodes[i].renderStyle = renderStyle;
@@ -184,14 +183,12 @@ export default class Painter {
         const renderStyle = {
           x,
           y,
-          contentX: x + (paddingLeft === 0 ? 0 : paddingLeft.toPx()) + (marginLeft === 0 ? 0 : marginLeft.toPx()),
-          contentY: y + (paddingTop === 0 ? 0 : paddingTop.toPx()) + (marginTop === 0 ? 0 : marginTop.toPx())
+          contentX: x + formatToPx(paddingLeft) + formatToPx(marginLeft),
+          contentY: y + formatToPx(paddingTop) + formatToPx(marginTop)
         }
-        // debugger
         bfsNodes[i].renderStyle = renderStyle;
       }
     }
-    // debugger
     return bfsNodes
   }
 
@@ -293,21 +290,6 @@ export default class Painter {
     }
   }
 
-  connectChildren(el, isRoot = true) {
-    if (el.children && el.children.length) {
-      el.children.map((child, index) => {
-        // 继承父节点样式
-        child.css = Object.assign({}, el.css, child.css)
-
-        // 设置parent
-        this._setParent(child, el, isRoot)
-        isRoot = false
-        // 设置了上一个兄弟节点
-        this._setSibling(child, el.children[index - 1], el.children[index + 1])
-        this.connectChildren(child, isRoot)
-      })
-    }
-  }
 
   _setParent(curr, element, isRoot) {
     curr.parent = isRoot ? null : element

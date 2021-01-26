@@ -123,18 +123,18 @@ Component({
 
         const calcTpl = await this.getCalcTpl(palette);
         this.data.calcTpl = calcTpl;
-        const { width: calcWidth, height: calcHeight } = calcTpl.children[0].css;
+        const { width: calcWidth, height: calcHeight } = calcTpl.children[0].processedLocation;
 
         // debugger;
 
         // ---------begin----------- 用作展示canvas，不影响最后保存的图片;这里只为了和图片保证1v1的展示比例
-        this.canvasStyleWidthInPx = calcWidth.toPx();
+        this.canvasStyleWidthInPx = calcWidth
+        this.canvasStyleHeightInPx = calcHeight
         if (this.properties.widthPixels) {
           // 如果重新设置过像素宽度，则重新设置比例
           setStringPrototype(screenK, this.properties.widthPixels / this.canvasStyleWidthInPx);
           this.canvasStyleWidthInPx = this.properties.widthPixels;
         }
-        this.canvasStyleHeightInPx = calcHeight.toPx();
         this.setData({
           painterStyle: `width:${this.canvasStyleWidthInPx}px;height:${this.canvasStyleHeightInPx}px;position: fixed;top:0px;`,
         });
@@ -185,25 +185,9 @@ Component({
       const dpr = wx.getSystemInfoSync().pixelRatio;
 
       // 重置canvas总高度
-      this.data.canvasNode.height = (palette.children[0].css.height.toPx()) * dpr;
-      this.data.canvasNode.width = (palette.children[0].css.width.toPx()) * dpr;
+      this.data.canvasNode.height = (palette.children[0].processedLocation.height) * dpr;
+      this.data.canvasNode.width = (palette.children[0].processedLocation.width) * dpr;
       this.data.canvasCtx.scale(dpr, dpr);
-      // wx.getSavedFileList({
-      //   success(res) {
-      //     if (res.fileList.length > 0) {
-      //       // debugger;
-      //       // 小程序本地文件存储的大小限制为10M，每次生成时删除上一次保存的海报
-      //       res.fileList.forEach((x) => {
-      //         wx.removeSavedFile({
-      //           filePath: x.filePath,
-      //           complete() {
-
-      //           }
-      //         });
-      //       });
-      //     }
-      //   }
-      // });
       return palette;
 
 

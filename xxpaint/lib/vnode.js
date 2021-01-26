@@ -31,7 +31,7 @@ export const connectChildren = (el, isRoot = true) => {
         _getChildren(el).forEach((child, index) => {
             // 继承父节点样式
             child.css = _inheritStyle(el, child)
-
+// debugger
             // 设置parent
             _setParent(child, el, isRoot)
             isRoot = false
@@ -61,6 +61,8 @@ export const initVnodeTree = (node) => {
                 queue.push(children[i]);
         }
     }
+    // 关联父子兄弟节点和样式继承
+    connectChildren(node)
     console.log('vnodeTree is: ', node)
     return node
 }
@@ -94,8 +96,9 @@ function _setSibling(curr, pre, next) {
  */
 function _inheritStyle(parent, child) {
     const copyParentCss = JSON.parse(JSON.stringify(parent.css))
+    // debugger
     const notInheritStyleOfParent = ['margin', 'padding', 'marginTop', 'marginLeft', 'marginBottom', 'marginRight', 'paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom']
-    for (const cssName of copyParentCss) {
+    for (const cssName of Object.keys(copyParentCss)) {
         if (!notInheritStyleOfParent.includes(cssName)) continue;
         delete copyParentCss[cssName]
     }
