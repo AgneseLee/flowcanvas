@@ -7,7 +7,7 @@ const GD = require('./gradient.js');
 import { initVnodeTree } from './vnode'
 
 const formatToPx = (v) => {
-  const res = v===0? v: v.toPx()
+  const res = v === 0 ? v : v.toPx()
   return +res;
 }
 const defaultPaddingMargin = {
@@ -82,7 +82,7 @@ export default class Painter {
     initVnodeTree(this.data)
     const tplTo1 = this.data
 
-    
+
     // 计算每个节点的宽高
     this.calcElementWidthHeight(tplTo1.children[0])
 
@@ -96,6 +96,7 @@ export default class Painter {
     const reverseBfsNodes = breadthFirstSearchRight(rootNode)
     for (let i = 0; i < reverseBfsNodes.length; i++) {
       this.preProcessObj(reverseBfsNodes[i]);
+      // debugger
       // inline-block宽高靠子节点撑大
       if (['view', 'rect'].includes(reverseBfsNodes[i].type)) {
         const { width: parentWidth, height: parentHeight } = reverseBfsNodes[i].css
@@ -115,7 +116,7 @@ export default class Painter {
           if (!isLines) {
             // 不换行
             widthSum += (xAdder)
-            // 有定宽，可能溢出；无定宽，自适应宽度
+            // 
             if (widthSum >= parentWidth.toPx() && j === 0) {
               // reverseBfsNodes[i].processedLocation.width = widthSum
               isLines = true;
@@ -140,6 +141,63 @@ export default class Painter {
 
 
         }
+      } else if (reverseBfsNodes[i].type === 'block') {
+        const curr = reverseBfsNodes[i]
+        // 宽度拉满画布,高度定高或者自适应
+        const { width: parentWidth, height: parentHeight } = reverseBfsNodes[i].css
+        if (isNaN(parentWidth.toPx())) {
+          console.error('please init width for block element.')
+          return;
+        }
+        const isAutoHeight = !!parentHeight
+        // debugger
+        if (isAutoHeight) {
+          // 自适应高度
+          let widthSum = 0, heightSum = 0, isLines = false
+          const children = reverseBfsNodes[i].children || []
+          for (let j = 0; j < children.length; j++) {
+            const childWidth = children[j].processedLocation.width
+            const childHeight = children[j].processedLocation.height
+            const childPaddingLeft = children[j].css.paddingLeft ? children[j].css.paddingLeft.toPx() : 0
+            const childMarginLeft = children[j].css.marginLeft ? children[j].css.marginLeft.toPx() : 0
+            const childMarginTop = children[j].css.marginTop ? children[j].css.marginTop.toPx() : 0
+            const childPaddingTop = children[j].css.paddingTop ? children[j].css.paddingTop.toPx() : 0
+            const xAdder = childWidth + childPaddingLeft + childMarginLeft
+            const yAdder = childHeight + childMarginTop + childPaddingTop
+            if (!isLines) {
+              // 不换行
+              widthSum += (xAdder)
+              // 有定宽，可能溢出；无定宽，自适应宽度
+              if (widthSum >= parentWidth.toPx() && j === 0) {
+                // reverseBfsNodes[i].processedLocation.width = widthSum
+                isLines = true;
+                heightSum += yAdder
+              } else if (widthSum > parentWidth.toPx()) {
+                isLines = true;
+                heightSum += yAdder
+              } else if (widthSum < parentWidth.toPx() && j === 0) {
+                isLines = false
+                heightSum += yAdder
+              }
+              reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
+            } else {
+              // 换行
+              heightSum += yAdder
+              isLines = false
+              widthSum = 0
+              reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
+              // debugger
+            }
+            // reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
+
+
+          }
+        } else {
+          // 定高
+          // reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
+
+        }
+
       }
     }
     // debugger
@@ -303,36 +361,36 @@ export default class Painter {
 
 
   // 根据一级json更新每个节点的高度
-  calcEachHeight(tpl) {
-    const parentIds = tpl.map((sb) => { return sb.f_sid; });
-    let sorted = parentIds.sort((a, b) => { return b - a; });
-    sorted = Array.from(new Set(sorted));
-    sorted.forEach((f_sid) => {
-      // debugger;
-      if (f_sid) {
-        // 有父节点
-        const parentNode = tpl.find((ll) => { return ll.sid === f_sid; });
-        const children = tpl.filter((x) => { return x.f_sid === f_sid; });
-        // console.log('-------------- ', children);
-        if (parentNode) {
-          parentNode.processedLocation.height = children.reduce((pre, next) => {
-            return pre + next.processedLocation.height;
-          }, 0);
-          const paddingbottom = parentNode.css.paddingbottom ? parentNode.css.paddingbottom.toPx() : 0;
-          parentNode.processedLocation.height += paddingbottom;
-          parentNode.css.height = `${parentNode.processedLocation.height}px`;
-        } else {
-          // 根节点
-          this.data.height = children.reduce((pre, next) => {
-            return pre + next.processedLocation.height;
-          }, 0);
-          const paddingbottom = this.data.paddingbottom ? this.data.paddingbottom.toPx() : 0;
-          this.data.height += paddingbottom;
-          this.data.height = `${this.data.height}px`;
-        }
-      }
-    });
-  }
+  // calcEachHeight(tpl) {
+  //   const parentIds = tpl.map((sb) => { return sb.f_sid; });
+  //   let sorted = parentIds.sort((a, b) => { return b - a; });
+  //   sorted = Array.from(new Set(sorted));
+  //   sorted.forEach((f_sid) => {
+  //     // debugger;
+  //     if (f_sid) {
+  //       // 有父节点
+  //       const parentNode = tpl.find((ll) => { return ll.sid === f_sid; });
+  //       const children = tpl.filter((x) => { return x.f_sid === f_sid; });
+  //       // console.log('-------------- ', children);
+  //       if (parentNode) {
+  //         parentNode.processedLocation.height = children.reduce((pre, next) => {
+  //           return pre + next.processedLocation.height;
+  //         }, 0);
+  //         const paddingbottom = parentNode.css.paddingbottom ? parentNode.css.paddingbottom.toPx() : 0;
+  //         parentNode.processedLocation.height += paddingbottom;
+  //         parentNode.css.height = `${parentNode.processedLocation.height}px`;
+  //       } else {
+  //         // 根节点
+  //         this.data.height = children.reduce((pre, next) => {
+  //           return pre + next.processedLocation.height;
+  //         }, 0);
+  //         const paddingbottom = this.data.paddingbottom ? this.data.paddingbottom.toPx() : 0;
+  //         this.data.height += paddingbottom;
+  //         this.data.height = `${this.data.height}px`;
+  //       }
+  //     }
+  //   });
+  // }
 
 
   // 添加id
@@ -398,6 +456,9 @@ export default class Painter {
         json = this._preProcess(view, view.css.background && view.css.borderRadius);
         break;
       case 'rect':
+        json = this._preProcess(view);
+        break;
+      case 'block':
         json = this._preProcess(view);
         break;
       default:
@@ -471,6 +532,9 @@ export default class Painter {
         this._fillAbsText(view);
         break;
       case 'rect':
+        this._drawAbsRect(view);
+        break;
+      case 'block':
         this._drawAbsRect(view);
         break;
       default:
@@ -1029,11 +1093,6 @@ export default class Painter {
 
   _drawAbsRect(view) {
     this.ctx.save();
-    // const {
-    //   width,
-    //   height,
-    //   x, y
-    // } = this._preProcess(view);
     const { height, width } = view.processedLocation;
     // const { x, y } = view.renderStyle
     const { contentX: x, contentY: y } = view.renderStyle

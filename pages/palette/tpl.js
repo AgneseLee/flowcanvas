@@ -1,12 +1,12 @@
 export default class ImageExample {
     palette({
-        
+
     }) {
         //const hasQpon = qponList && qponList.length > 0;
         const image = `/pages/palette/default_goods.png`
         const nickName = 'hdhdhdh'
         const background = '#EEE685'
-     
+
         const tplhh = {
             children: [{
                 type: 'rect',
@@ -14,7 +14,7 @@ export default class ImageExample {
                     // background: '#FEFDFD',
                     // background: `linear-gradient(0deg, ${background} 0%, ${background} 50%)`,
                     // background:'#EEE685',
-                    color:'#EEB4B4',
+                    color: '#EEB4B4',
                     width: '350px',
                     height: '428px',
                     top: '56px',
@@ -78,8 +78,8 @@ export default class ImageExample {
                                     fontFamily: '',
                                     textAlign: 'left',
                                     paddingTop: '0px',
-                                    marginLeft:'80px',
-                                  
+                                    marginLeft: '80px',
+
                                 }
                             },
                             {
@@ -106,7 +106,7 @@ export default class ImageExample {
                                     fontFamily: '',
                                     textAlign: 'left',
                                     // marginLeft:'40px',
-                                    paddingLeft:'0px',
+                                    paddingLeft: '0px',
                                     paddingTop: '0px',
                                 }
                             },
@@ -134,7 +134,7 @@ export default class ImageExample {
                                     fontFamily: '',
                                     textAlign: 'left',
                                     // marginLeft:'40px',
-                                    paddingLeft:'0px',
+                                    paddingLeft: '0px',
                                     paddingTop: '0px',
                                 }
                             },
@@ -162,7 +162,7 @@ export default class ImageExample {
                                     fontFamily: '',
                                     textAlign: 'left',
                                     // marginLeft:'40px',
-                                    paddingLeft:'0px',
+                                    paddingLeft: '0px',
                                     paddingTop: '0px',
                                 }
                             },
@@ -189,26 +189,38 @@ export default class ImageExample {
                                     textDecoration: 'none',
                                     fontFamily: '',
                                     textAlign: 'left',
-                                    marginLeft:'10px',
-                                    paddingLeft:'0px',
+                                    marginLeft: '10px',
+                                    paddingLeft: '0px',
                                     paddingTop: '0px',
                                     // marginTop:'20px'
                                 }
                             },
-                            
+
                         ]
                     },
-                    { 
-                        type: 'image',
-                        url: image,
-                        css: {
+                    // { 
+                    //     type: 'image',
+                    //     url: image,
+                    //     css: {
+                    //         width: '350px',
+                    //         height: '350px',
+                    //         mode: 'aspectFill',
+                    //         borderRadius: '0px',
+                    //         marginTop:'10px',
+
+                    //     },
+                    // },
+                    {
+                        type: 'block',
+                        css:{
+
+                            // 宽度拉满画布,高度定高或者自适应
                             width: '350px',
-                            height: '350px',
-                            mode: 'aspectFill',
-                            borderRadius: '0px',
-                            marginTop:'10px',
-                      
-                        },
+                            height: '20px',
+                            background: '#F4A460',
+                            color:'#F4A460',
+                        }
+
                     },
                     {
                         type: 'text',
@@ -232,8 +244,8 @@ export default class ImageExample {
                             textDecoration: 'none',
                             fontFamily: '',
                             textAlign: 'left',
-                            marginTop:'10px',
-                            marginLeft:'8px'
+                            marginTop: '10px',
+                            marginLeft: '8px'
                         }
                     },
                     {
@@ -259,11 +271,11 @@ export default class ImageExample {
                             fontFamily: '',
                             textAlign: 'left',
                             // marginTop:'10px',
-                            marginLeft:'8px'
+                            marginLeft: '8px'
                         }
                     },
-                    
-                  
+
+
                 ]
             }]
         }

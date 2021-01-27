@@ -97,7 +97,7 @@ function _setSibling(curr, pre, next) {
 function _inheritStyle(parent, child) {
     const copyParentCss = JSON.parse(JSON.stringify(parent.css))
     // debugger
-    const notInheritStyleOfParent = ['margin', 'padding', 'marginTop', 'marginLeft', 'marginBottom', 'marginRight', 'paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom']
+    const notInheritStyleOfParent = ['height', 'width', 'margin', 'padding', 'marginTop', 'marginLeft', 'marginBottom', 'marginRight', 'paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom']
     for (const cssName of Object.keys(copyParentCss)) {
         if (!notInheritStyleOfParent.includes(cssName)) continue;
         delete copyParentCss[cssName]
