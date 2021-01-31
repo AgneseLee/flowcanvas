@@ -5,10 +5,37 @@ const GD = require('./gradient.js');
 // const Modifier = require('./modifier').default;
 // const downloader = new Downloader();
 import { initVnodeTree } from './vnode'
+import {insertVnodeIntoLine} from './line'
 
 const formatToPx = (v) => {
   const res = v === 0 ? v : v.toPx()
   return +res;
+}
+
+/**
+ * 转换成px
+ * @param {string} _w 5px or 50% 
+ * @param {object} parent 父节点对象
+ * @param {string} sizeName width/height
+ */
+const formatToNum = (_w, parent, sizeName) => {
+  let width = 0
+  if (_w.indexOf('px') > -1) {
+    width = _w.toPx();
+  } else if (_w.indexOf('%') && parent) {
+    width  = (_w.replace('%', '')) / 100
+    while (parent && parent.css[sizeName].indexOf('%') > -1) {
+      const percentage = (parent.css[sizeName].replace('%', '')) / 100
+      width = width * percentage
+      parent = parent.parent
+    }
+    width = width * parent.css[sizeName].toPx()
+
+  } else {
+    console.error(`please enter legal ${sizeName} of number or percentage.`)
+  }
+  // debugger
+  return width
 }
 const defaultPaddingMargin = {
   paddingTop: 0,
@@ -81,11 +108,12 @@ export default class Painter {
     // this.calcEachHeight(tplTo1.views);
     initVnodeTree(this.data)
     const tplTo1 = this.data
-
+    // debugger
+    console.log('--- ', tplTo1)
 
     // 计算每个节点的宽高
     this.calcElementWidthHeight(tplTo1.children[0])
-
+    // debugger
     // 计算每个节点位置
     const nodes = this.calcElementPosition(tplTo1.children[0])
     this.data.views = nodes
@@ -96,10 +124,9 @@ export default class Painter {
     const reverseBfsNodes = breadthFirstSearchRight(rootNode)
     for (let i = 0; i < reverseBfsNodes.length; i++) {
       this.preProcessObj(reverseBfsNodes[i]);
-      // debugger
       // inline-block宽高靠子节点撑大
       if (['view', 'rect'].includes(reverseBfsNodes[i].type)) {
-        const { width: parentWidth, height: parentHeight } = reverseBfsNodes[i].css
+        const { width: parentWidth, height: parentHeight } = reverseBfsNodes[i].processedLocation
         let widthSum = 0, heightSum = 0, isLines = false
         // debugger
         const children = reverseBfsNodes[i].children || []
@@ -117,17 +144,18 @@ export default class Painter {
             // 不换行
             widthSum += (xAdder)
             // 
-            if (widthSum >= parentWidth.toPx() && j === 0) {
+            if (widthSum >= parentWidth && j === 0) {
               // reverseBfsNodes[i].processedLocation.width = widthSum
               isLines = true;
               heightSum += yAdder
-            } else if (widthSum > parentWidth.toPx()) {
+            } else if (widthSum > parentWidth) {
               isLines = true;
               heightSum += yAdder
-            } else if (widthSum < parentWidth.toPx() && j === 0) {
+            } else if (widthSum < parentWidth && j === 0) {
               isLines = false
               heightSum += yAdder
             }
+            // reverseBfsNodes[i].lines
             reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
           } else {
             // 换行
@@ -135,20 +163,17 @@ export default class Painter {
             isLines = false
             widthSum = 0
             reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
-            // debugger
           }
           // reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
-
-
         }
       } else if (reverseBfsNodes[i].type === 'block') {
-        const curr = reverseBfsNodes[i]
+        // 块级元素
         // 宽度拉满画布,高度定高或者自适应
-        const { width: parentWidth, height: parentHeight } = reverseBfsNodes[i].css
-        if (isNaN(parentWidth.toPx())) {
-          console.error('please init width for block element.')
-          return;
-        }
+        const { width: parentWidth, height: parentHeight } = reverseBfsNodes[i].processedLocation
+        // if (!(parentWidth.indexOf('px') > -1 || parentWidth.indexOf('%') > -1)) {
+        //   console.error('please init width for block element.')
+        //   return;
+        // }
         const isAutoHeight = !!parentHeight
         // debugger
         if (isAutoHeight) {
@@ -168,14 +193,14 @@ export default class Painter {
               // 不换行
               widthSum += (xAdder)
               // 有定宽，可能溢出；无定宽，自适应宽度
-              if (widthSum >= parentWidth.toPx() && j === 0) {
+              if (widthSum >= parentWidth && j === 0) {
                 // reverseBfsNodes[i].processedLocation.width = widthSum
                 isLines = true;
                 heightSum += yAdder
-              } else if (widthSum > parentWidth.toPx()) {
+              } else if (widthSum > parentWidth) {
                 isLines = true;
                 heightSum += yAdder
-              } else if (widthSum < parentWidth.toPx() && j === 0) {
+              } else if (widthSum < parentWidth && j === 0) {
                 isLines = false
                 heightSum += yAdder
               }
@@ -220,32 +245,33 @@ export default class Painter {
         continue;
       }
       const isLines = this._getIsChangeLine(bfsNodes[i])
+      insertVnodeIntoLine(bfsNodes[i], isLines)
       // debugger
-      if (isLines) {
-        // 换行时, y:叠加pre兄弟节点坐标, x:叠加父节点坐标
-        const x = parent.renderStyle.contentX
-        const y = this._getPreLayout(bfsNodes[i]).y + this._getPreLayout(bfsNodes[i]).height
-        // debugger
-        const renderStyle = {
-          x,
-          y,
-          contentX: x + formatToPx(paddingLeft) + formatToPx(marginLeft),
-          contentY: y + formatToPx(paddingTop) + formatToPx(marginTop)
-        }
-        // debugger
-        bfsNodes[i].renderStyle = renderStyle;
-      } else {
-        // 不换行时, y:叠加父节点坐标, x:叠加pre兄弟节坐标
-        const x = this._getPreLayout(bfsNodes[i]).x + this._getPreLayout(bfsNodes[i]).width
-        const y = this._getPreLayout(bfsNodes[i]).y
-        const renderStyle = {
-          x,
-          y,
-          contentX: x + formatToPx(paddingLeft) + formatToPx(marginLeft),
-          contentY: y + formatToPx(paddingTop) + formatToPx(marginTop)
-        }
-        bfsNodes[i].renderStyle = renderStyle;
-      }
+      // if (isLines) {
+      //   // 换行时, y:叠加pre兄弟节点坐标, x:叠加父节点坐标
+      //   const x = parent.renderStyle.contentX
+      //   const y = this._getPreLayout(bfsNodes[i]).y + this._getPreLayout(bfsNodes[i]).height
+      //   // debugger
+      //   const renderStyle = {
+      //     x,
+      //     y, 
+      //     contentX: x + formatToPx(paddingLeft) + formatToPx(marginLeft),
+      //     contentY: y + formatToPx(paddingTop) + formatToPx(marginTop)
+      //   }
+      //   // debugger
+      //   bfsNodes[i].renderStyle = renderStyle;
+      // } else {
+      //   // 不换行时, y:叠加父节点坐标, x:叠加pre兄弟节坐标
+      //   const x = this._getPreLayout(bfsNodes[i]).x + this._getPreLayout(bfsNodes[i]).width
+      //   const y = this._getPreLayout(bfsNodes[i]).y
+      //   const renderStyle = {
+      //     x,
+      //     y,
+      //     contentX: x + formatToPx(paddingLeft) + formatToPx(marginLeft),
+      //     contentY: y + formatToPx(paddingTop) + formatToPx(marginTop)
+      //   }
+      //   bfsNodes[i].renderStyle = renderStyle;
+      // }
     }
     return bfsNodes
   }
@@ -277,24 +303,32 @@ export default class Painter {
    * @param {object} targetNode 
    */
   _getIsChangeLine(targetNode) {
+    // debugger
     const parent = targetNode.parent
     const pre = targetNode.pre
     if (pre) {
       // 非第一个子节点
-      const { width: pw, height: ph } = this._getContainerLayout(parent)
-      const { x, y, width: preW, height: preH } = this._getPreLayout(targetNode)
-      const childPaddingLeft = targetNode.css.paddingLeft ? targetNode.css.paddingLeft.toPx() : 0
-      const childMarginLeft = targetNode.css.marginLeft ? targetNode.css.marginLeft.toPx() : 0
-      const currW = targetNode.processedLocation.width
-      const nextStartX = x + preW + childPaddingLeft + childMarginLeft + currW
+      if (pre.type && pre.type === 'block') {
+        // 前一个兄弟节点是block，当前节点必须换行
+        targetNode.isLines = true
+      } else {
+        const { width: pw, height: ph } = this._getContainerLayout(parent)
+        const { x, y, width: preW, height: preH } = this._getPreLayout(targetNode)
+        const childPaddingLeft = targetNode.css.paddingLeft ? targetNode.css.paddingLeft.toPx() : 0
+        const childMarginLeft = targetNode.css.marginLeft ? targetNode.css.marginLeft.toPx() : 0
+        const currW = targetNode.processedLocation.width
+        const nextStartX = x + preW + childPaddingLeft + childMarginLeft + currW
 
-      targetNode.isLines = nextStartX >= pw
+        targetNode.isLines = nextStartX >= pw
+      }
       // debugger
 
     } else {
       // 第一个子节点不需判断是否换行
       targetNode.isLines = false
     }
+
+
     return targetNode.isLines
 
   }
@@ -447,6 +481,7 @@ export default class Painter {
   }
 
   preProcessObj(view) {
+    // 获取原始css宽高/文字换行高度
     let json;
     switch (view.type) {
       case 'image':
@@ -637,6 +672,7 @@ export default class Painter {
     };
    */
   _preProcess(view, notClip) {
+    // debugger
     let width = 0;
     let height;
     let extra;
@@ -660,7 +696,8 @@ export default class Painter {
         const linesArray = [];
         for (let i = 0; i < textArray.length; ++i) {
           const textLength = this.ctx.measureText(textArray[i]).width;
-          const partWidth = view.css.width ? view.css.width.toPx() : textLength;
+          const partWidth = view.css.width ? formatToNum(view.css.width, view.parent, 'width') : textLength;
+          // debugger
           const calLines = Math.ceil(textLength / partWidth);
           width = partWidth > width ? partWidth : width;
           lines += calLines;
@@ -722,16 +759,10 @@ export default class Painter {
           console.error('You should set width and height');
           return;
         }
-        if (view.css.width === 'auto') {
-          width = 0;
-        } else {
-          width = view.css.width.toPx();
-        }
-        if (view.css.height === 'auto') {
-          height = 0;
-        } else {
-          height = view.css.height.toPx();
-        }
+
+        width = formatToNum(view.css.width, view.parent, 'width')
+        height = formatToNum(view.css.height, view.parent, 'height')
+       
         break;
     }
     let x;

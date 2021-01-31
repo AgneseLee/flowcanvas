@@ -14,6 +14,7 @@ export const createVnode = (node) => {
         layoutSize: { height: 0, width: 0 }, // 绘制宽高
         renderStyle: { x: 0, y: 0, contentX: 0, contentY: 0 }, // 绘制位置
         children: node.children || [],
+        lines:[],
         parent: null,
         pre: null,
         next: null

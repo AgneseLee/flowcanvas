@@ -4,9 +4,7 @@ export default class ImageExample {
     }) {
         //const hasQpon = qponList && qponList.length > 0;
         const image = `/pages/palette/default_goods.png`
-        const nickName = 'hdhdhdh'
-        const background = '#EEE685'
-
+ 
         const tplhh = {
             children: [{
                 type: 'rect',
@@ -48,7 +46,7 @@ export default class ImageExample {
                             fontFamily: '',
                             textAlign: 'left',
                             paddingTop: '30px',
-                            // marginLeft: '60px'
+                            marginLeft: '30px'
                         },
                         children: [
                             {
@@ -192,7 +190,7 @@ export default class ImageExample {
                                     marginLeft: '10px',
                                     paddingLeft: '0px',
                                     paddingTop: '0px',
-                                    // marginTop:'20px'
+                                    marginTop:'20px'
                                 }
                             },
 
@@ -213,13 +211,67 @@ export default class ImageExample {
                     {
                         type: 'block',
                         css:{
-
                             // 宽度拉满画布,高度定高或者自适应
-                            width: '350px',
+                            width: '40%',
                             height: '20px',
                             background: '#F4A460',
                             color:'#F4A460',
-                        }
+                            // marginRight:'40px'
+                        },
+                        children:[
+                            {
+                                type: 'text',
+                                "text": 'block子节点4-1',
+                                css: {
+                                    color: 'rgba(0,0,0,0.9)',
+                                    background: '#458B00',
+                                    width: '90%',
+                                    // height: '58px',
+                                    rotate: '0',
+                                    borderRadius: '',
+                                    borderWidth: '',
+                                    borderColor: '#000000',
+                                    shadow: '',
+                                    padding: '0px',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    maxLines: '1',
+                                    lineHeight: '20px',
+                                    textStyle: 'fill',
+                                    textDecoration: 'none',
+                                    fontFamily: '',
+                                    textAlign: 'left',
+                                    marginTop: '10px',
+                                    marginLeft: '18px'
+                                }
+                            },
+                            {
+                                type: 'text',
+                                "text": 'block子节点4-2加长加长加长',
+                                css: {
+                                    color: 'rgba(0,0,0,0.9)',
+                                    background: '#458B00',
+                                    width: '100%',
+                                    // height: '58px',
+                                    rotate: '0',
+                                    borderRadius: '',
+                                    borderWidth: '',
+                                    borderColor: '#000000',
+                                    shadow: '',
+                                    padding: '0px',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    maxLines: '1',
+                                    lineHeight: '20px',
+                                    textStyle: 'fill',
+                                    textDecoration: 'none',
+                                    fontFamily: '',
+                                    textAlign: 'left',
+                                    marginTop: '10px',
+                                    marginLeft: '18px'
+                                }
+                            }
+                        ]
 
                     },
                     {
@@ -245,7 +297,7 @@ export default class ImageExample {
                             fontFamily: '',
                             textAlign: 'left',
                             marginTop: '10px',
-                            marginLeft: '8px'
+                            marginLeft: '18px'
                         }
                     },
                     {
@@ -270,7 +322,7 @@ export default class ImageExample {
                             textDecoration: 'none',
                             fontFamily: '',
                             textAlign: 'left',
-                            // marginTop:'10px',
+                            marginTop:'30px',
                             marginLeft: '8px'
                         }
                     },
