@@ -128,32 +128,19 @@ function setStringPrototype(screenK, scale) {
 
 // 逆序广度优先
 function breadthFirstSearchRight(node) {
-
   var nodes = [];
-
   if (node != null) {
-
     var queue = [];
-
     queue.unshift(node);
-
     while (queue.length != 0) {
-
       var item = queue.shift();
-
       nodes.push(item);
-
       var children = item.children || []
-
       for (var i = children.length - 1; i >= 0; i--)
         queue.push(children[i]);
-
     }
-
   }
-
   return nodes.reverse();
-
 }
 // 顺序广度优先
 function breadthFirstSearch(node) {
@@ -172,6 +159,67 @@ function breadthFirstSearch(node) {
   return nodes;
 }
 
+/**
+ * 把css中的padding/margin统一格式化成数字输出
+ * @param {object} css 
+ * @param {object} parent 父节点
+ */
+function formatPaddingMargin(css, parent) {
+  const copy = JSON.parse(JSON.stringify(css))
+  // const {  } = copy
+  const arr = ["paddingLeft", "marginLeft", "paddingTop", "marginTop", "paddingRight", "paddingBottom", "marginRight", "marginBottom"]
+  for (const name of arr) {
+    // const attribute = copy[name]
+    const sizeName = (name.indexOf('Left') > -1 || name.indexOf('Right') > -1) ? 'width' : 'height'
+    if (!copy[name]) {
+      copy[name] = 0
+    }
+    else if (copy[name].indexOf('px') > -1) {
+      copy[name] = copy[name].toPx();
+    } else if (copy[name].indexOf('%') && parent) {
+      copy[name] = (copy[name].replace('%', '')) / 100
+      while (parent && parent.css[sizeName].indexOf('%') > -1) {
+        const percentage = (parent.css[sizeName].replace('%', '')) / 100
+        copy[name] = copy[name] * percentage
+        parent = parent.parent
+      }
+      copy[name] = copy[name] * parent.css[sizeName].toPx()
+
+    } else {
+      console.error(`please enter legal ${name} of number or percentage.`)
+    }
+  }
+  return copy
+}
+
+/**
+ * 转换成px
+ * @param {string} _w 5px or 50% 
+ * @param {object} parent 父节点对象
+ * @param {string} sizeName width/height
+ */
+function formatToNum(_w, parent, sizeName) {
+  let width = 0
+  if (!_w) {
+    return width
+  }
+  else if (_w.indexOf('px') > -1) {
+    width = _w.toPx();
+  } else if (_w.indexOf('%') && parent) {
+    width = (_w.replace('%', '')) / 100
+    while (parent && parent.css[sizeName].indexOf('%') > -1) {
+      const percentage = (parent.css[sizeName].replace('%', '')) / 100
+      width = width * percentage
+      parent = parent.parent
+    }
+    width = width * parent.css[sizeName].toPx()
+
+  } else {
+    console.error(`please enter legal ${sizeName} of number or percentage.`)
+  }
+  // debugger
+  return width
+}
 
 
 module.exports = {
@@ -180,6 +228,8 @@ module.exports = {
   canUseNewCanvas,
   setStringPrototype,
   breadthFirstSearchRight,
-  breadthFirstSearch
+  breadthFirstSearch,
+  formatPaddingMargin,
+  formatToNum
 };
 

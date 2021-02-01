@@ -175,7 +175,7 @@ export default class ImageExample {
                                     rotate: '0',
                                     borderRadius: '',
                                     borderWidth: '',
-                                    borderColor: '#000000',
+                                    borderColor: '#000000', 
                                     shadow: '',
                                     padding: '0px',
                                     // padding:'3px 9px  38px 9px',

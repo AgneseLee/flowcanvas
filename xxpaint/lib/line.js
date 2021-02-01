@@ -1,14 +1,18 @@
+import { getPreLayout } from './layout'
+import { formatPaddingMargin } from './util'
+
+
 /**
  * 创建行对象
  * @param {object} node 被插入行中的某个节点
  */
-export const createLine = (node) => {
+function _createLine(node) {
     const parent = node.parent
     const { paddingLeft, marginLeft, paddingTop, marginTop } = formatPaddingMargin(node.css)
 
     // 换行时, y:叠加pre兄弟节点坐标, x:叠加父节点坐标
     const x = parent.renderStyle.contentX
-    const y = _getPreLayout(node).y + _getPreLayout(node).height
+    const y = getPreLayout(node).y + getPreLayout(node).height
     // debugger
     const renderStyle = {
         x,
@@ -34,96 +38,6 @@ export const createLine = (node) => {
     return Object.assign(line, renderStyle)
 }
 
-function _getPreLayout(targetNode) {
-    let cur = targetNode.pre
-
-    // 如果没有前一个或者前面的都不在文档流中，获取容器的
-    if (cur) {
-        return {
-            width: cur.processedLocation.width,
-            height: cur.processedLocation.height,
-            x: cur.renderStyle.contentX,
-            y: cur.renderStyle.contentY
-        }
-    } else {
-        return {
-            width: 0,
-            height: 0,
-            x: _getContainerLayout(targetNode.parent).contentX,
-            y: _getContainerLayout(targetNode.parent).contentY
-        }
-    }
-}
-function _getContainerLayout(container) {
-    // debugger
-    if (!container) {
-        // root
-        if (!container) {
-            debugger
-        }
-        container = {
-            renderStyles: {
-                width: container.processedLocation.width,
-                height: container.processedLocation.height,
-                paddingTop: 0,
-                paddingBottom: 0,
-                paddingLeft: 0,
-                paddingRight: 0,
-                marginLeft: 0,
-                marginRight: 0,
-                marginTop: 0,
-                marginBottom: 0,
-                // contentWidth: container.processedLocation.width,
-                // contentHeight: container.processedLocation.height
-            },
-            x: 0,
-            y: 0,
-            contentX: 0,
-            contentY: 0
-        }
-    }
-    return {
-        width: container.processedLocation.width,
-        height: container.processedLocation.height,
-        x: container.x,
-        y: container.y,
-        paddingTop: container.css.paddingTop ? container.css.paddingTop.toPx() : 0,
-        paddingBottom: container.css.paddingBottom ? container.css.paddingBottom.toPx() : 0,
-        paddingLeft: container.css.paddingLeft ? container.css.paddingLeft.toPx() : 0,
-        paddingRight: container.css.paddingRight ? container.css.paddingRight.toPx() : 0,
-        marginLeft: container.css.marginLeft ? container.css.marginLeft.toPx() : 0,
-        marginRight: container.css.marginRight ? container.css.marginRight.toPx() : 0,
-        marginTop: container.css.marginTop ? container.css.marginTop.toPx() : 0,
-        marginBottom: container.css.marginBottom ? container.css.marginBottom.toPx() : 0,
-        contentX: container.renderStyle.contentX,
-        contentY: container.renderStyle.contentY,
-        // contentWidth: container.renderStyles.contentWidth,
-        // contentHeight: container.renderStyles.contentHeight
-    }
-}
-
-/**
- * 把节点插入行
- * @param {object} vnode 
- * @param {boolean} changeLine 该元素是否换行
- */
-export const insertVnodeIntoLine = (vnode, changeLine) => {
-    if (changeLine || vnode.parent.lines.length === 0) {
-        const newLine = createLine(vnode)
-        // debugger
-        newLine.children.push(vnode)
-        vnode.parent.lines.push(newLine)
-        _updateLineLayout(newLine)
-        return
-    }
-    if (vnode.parent.lines.length > 0) {
-        const currLine = vnode.parent.lines[vnode.parent.lines.length - 1]
-        currLine.children.push(vnode)
-        _updateLineLayout(currLine)
-        return
-    }
-
-}
 
 /**
  * 更新行的宽高
@@ -170,10 +84,8 @@ function _updateLineLayout(line) {
 }
 
 function _getPreLayoutInLine(targetNode, line) {
-    // let cur = targetNode.pre
     const idx = line.children.findIndex(x => x === targetNode)
-    const preEleInLine = line.children[idx-1]
-    // console.log(idx)
+    const preEleInLine = line.children[idx - 1]
     if (idx < 0) {
         console.error('找不到行内元素')
         return {
@@ -249,33 +161,7 @@ function _getContainerLineLayout(container) {
 }
 
 
-function formatPaddingMargin(css, parent) {
-    const copy = JSON.parse(JSON.stringify(css))
-    // const {  } = copy
-    const arr = ["paddingLeft", "marginLeft", "paddingTop", "marginTop", "paddingRight", "paddingBottom", "marginRight", "marginBottom"]
-    for (const name of arr) {
-        // const attribute = copy[name]
-        const sizeName = (name.indexOf('Left') > -1 || name.indexOf('Right') > -1) ? 'width' : 'height'
-        if (!copy[name]) {
-            copy[name] = 0
-        }
-        else if (copy[name].indexOf('px') > -1) {
-            copy[name] = copy[name].toPx();
-        } else if (copy[name].indexOf('%') && parent) {
-            copy[name] = (copy[name].replace('%', '')) / 100
-            while (parent && parent.css[sizeName].indexOf('%') > -1) {
-                const percentage = (parent.css[sizeName].replace('%', '')) / 100
-                copy[name] = copy[name] * percentage
-                parent = parent.parent
-            }
-            copy[name] = copy[name] * parent.css[sizeName].toPx()
 
-        } else {
-            console.error(`please enter legal ${name} of number or percentage.`)
-        }
-    }
-    return copy
-}
 
 /**
  * 更新行中元素位置
@@ -283,7 +169,6 @@ function formatPaddingMargin(css, parent) {
  */
 function _updateElementLayout(line) {
     line.children.forEach(el => {
-        // debugger
         const { paddingLeft, marginLeft, paddingTop, marginTop } = formatPaddingMargin(el.css)
         const x = _getPreLayoutInLine(el, line).x + _getPreLayoutInLine(el, line).width
         const y = line.y
@@ -294,6 +179,28 @@ function _updateElementLayout(line) {
             contentY: y + line.paddingTop + line.marginTop
         }
         // el.lineRender = renderStyle
-        el.renderStyle = renderStyle; 
+        el.renderStyle = renderStyle;
     })
+}
+
+/**
+ * 把节点插入行
+ * @param {object} vnode 
+ * @param {boolean} changeLine 该元素是否换行
+ */
+export const insertVnodeIntoLine = (vnode, changeLine) => {
+    if (changeLine || vnode.parent.lines.length === 0) {
+        const newLine = _createLine(vnode)
+        // debugger
+        newLine.children.push(vnode)
+        vnode.parent.lines.push(newLine)
+        _updateLineLayout(newLine)
+        return
+    }
+    if (vnode.parent.lines.length > 0) {
+        const currLine = vnode.parent.lines[vnode.parent.lines.length - 1]
+        currLine.children.push(vnode)
+        _updateLineLayout(currLine)
+        return
+    }
 }

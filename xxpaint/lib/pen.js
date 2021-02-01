@@ -1,42 +1,14 @@
 import Downloader from './downloader';
 // import TreeNode from './treeNode'
-import { breadthFirstSearchRight, breadthFirstSearch } from './util'
+import { breadthFirstSearchRight, breadthFirstSearch,formatToNum } from './util'
 const GD = require('./gradient.js');
 // const Modifier = require('./modifier').default;
 // const downloader = new Downloader();
 import { initVnodeTree } from './vnode'
 import {insertVnodeIntoLine} from './line'
+import {getIsChangeLine, getPreLayout} from './layout'
 
-const formatToPx = (v) => {
-  const res = v === 0 ? v : v.toPx()
-  return +res;
-}
 
-/**
- * 转换成px
- * @param {string} _w 5px or 50% 
- * @param {object} parent 父节点对象
- * @param {string} sizeName width/height
- */
-const formatToNum = (_w, parent, sizeName) => {
-  let width = 0
-  if (_w.indexOf('px') > -1) {
-    width = _w.toPx();
-  } else if (_w.indexOf('%') && parent) {
-    width  = (_w.replace('%', '')) / 100
-    while (parent && parent.css[sizeName].indexOf('%') > -1) {
-      const percentage = (parent.css[sizeName].replace('%', '')) / 100
-      width = width * percentage
-      parent = parent.parent
-    }
-    width = width * parent.css[sizeName].toPx()
-
-  } else {
-    console.error(`please enter legal ${sizeName} of number or percentage.`)
-  }
-  // debugger
-  return width
-}
 const defaultPaddingMargin = {
   paddingTop: 0,
   paddingBottom: 0,
@@ -90,22 +62,7 @@ export default class Painter {
   }
 
   transformNTo1() {
-    // 给每个节点标记id
-    // this.routeByDFS();
-    // this.createTree()
-    // 基于嵌套层级json计算每个节点的宽高和位置
-    // this.routeByBFS();
-
-    // const nTpl = this.data;
-    // const mmodif = new Modifier(nTpl);
-    // this.data.mmodif = mmodif;
-
-
-    // 计算嵌套模板每个节点相对(0,0)的位置,output 平级节点
-    // const tplTo1 = mmodif.getAbsoluteTpl({ globalWidth: this.globalWidth, globalHeight: this.globalHeight });
-    // this.data = tplTo1;
-
-    // this.calcEachHeight(tplTo1.views);
+  
     initVnodeTree(this.data)
     const tplTo1 = this.data
     // debugger
@@ -239,12 +196,12 @@ export default class Painter {
         bfsNodes[i].renderStyle = {
           x: 0,
           y: 0,
-          contentX: formatToPx(paddingLeft) + formatToPx(marginLeft),
-          contentY: formatToPx(paddingTop) + formatToPx(marginTop)
+          contentX: formatToNum(paddingLeft, bfsNodes[i].parent, 'width') + formatToNum(marginLeft, bfsNodes[i].parent, 'width'),
+          contentY: formatToNum(paddingTop, bfsNodes[i].parent, 'height') + formatToNum(marginTop, bfsNodes[i].parent, 'height')
         }
         continue;
       }
-      const isLines = this._getIsChangeLine(bfsNodes[i])
+      const isLines = getIsChangeLine(bfsNodes[i])
       insertVnodeIntoLine(bfsNodes[i], isLines)
       // debugger
       // if (isLines) {
@@ -276,122 +233,7 @@ export default class Painter {
     return bfsNodes
   }
 
-  // 这里前一个节点必须在文档流中，可能是父节点，可能是兄弟节点
-  _getPreLayout(targetNode) {
-    let cur = targetNode.pre
 
-    // 如果没有前一个或者前面的都不在文档流中，获取容器的
-    if (cur) {
-      return {
-        width: cur.processedLocation.width,
-        height: cur.processedLocation.height,
-        x: cur.renderStyle.contentX,
-        y: cur.renderStyle.contentY
-      }
-    } else {
-      return {
-        width: 0,
-        height: 0,
-        x: this._getContainerLayout(targetNode.parent).contentX,
-        y: this._getContainerLayout(targetNode.parent).contentY
-      }
-    }
-  }
-
-  /**
-   * 节点是否换行
-   * @param {object} targetNode 
-   */
-  _getIsChangeLine(targetNode) {
-    // debugger
-    const parent = targetNode.parent
-    const pre = targetNode.pre
-    if (pre) {
-      // 非第一个子节点
-      if (pre.type && pre.type === 'block') {
-        // 前一个兄弟节点是block，当前节点必须换行
-        targetNode.isLines = true
-      } else {
-        const { width: pw, height: ph } = this._getContainerLayout(parent)
-        const { x, y, width: preW, height: preH } = this._getPreLayout(targetNode)
-        const childPaddingLeft = targetNode.css.paddingLeft ? targetNode.css.paddingLeft.toPx() : 0
-        const childMarginLeft = targetNode.css.marginLeft ? targetNode.css.marginLeft.toPx() : 0
-        const currW = targetNode.processedLocation.width
-        const nextStartX = x + preW + childPaddingLeft + childMarginLeft + currW
-
-        targetNode.isLines = nextStartX >= pw
-      }
-      // debugger
-
-    } else {
-      // 第一个子节点不需判断是否换行
-      targetNode.isLines = false
-    }
-
-
-    return targetNode.isLines
-
-  }
-
-  // 获取父节点的布局信息
-  _getContainerLayout(container) {
-    // debugger
-    if (!container) {
-      // root
-      if (!container) {
-        debugger
-      }
-      container = {
-        renderStyles: {
-          width: container.processedLocation.width,
-          height: container.processedLocation.height,
-          paddingTop: 0,
-          paddingBottom: 0,
-          paddingLeft: 0,
-          paddingRight: 0,
-          marginLeft: 0,
-          marginRight: 0,
-          marginTop: 0,
-          marginBottom: 0,
-          // contentWidth: container.processedLocation.width,
-          // contentHeight: container.processedLocation.height
-        },
-        x: 0,
-        y: 0,
-        contentX: 0,
-        contentY: 0
-      }
-    }
-    return {
-      width: container.processedLocation.width,
-      height: container.processedLocation.height,
-      x: container.x,
-      y: container.y,
-      paddingTop: container.css.paddingTop ? container.css.paddingTop.toPx() : 0,
-      paddingBottom: container.css.paddingBottom ? container.css.paddingBottom.toPx() : 0,
-      paddingLeft: container.css.paddingLeft ? container.css.paddingLeft.toPx() : 0,
-      paddingRight: container.css.paddingRight ? container.css.paddingRight.toPx() : 0,
-      marginLeft: container.css.marginLeft ? container.css.marginLeft.toPx() : 0,
-      marginRight: container.css.marginRight ? container.css.marginRight.toPx() : 0,
-      marginTop: container.css.marginTop ? container.css.marginTop.toPx() : 0,
-      marginBottom: container.css.marginBottom ? container.css.marginBottom.toPx() : 0,
-      contentX: container.renderStyle.contentX,
-      contentY: container.renderStyle.contentY,
-      // contentWidth: container.renderStyles.contentWidth,
-      // contentHeight: container.renderStyles.contentHeight
-    }
-  }
-
-
-  _setParent(curr, element, isRoot) {
-    curr.parent = isRoot ? null : element
-    // this.root = element.root
-  }
-
-  _setSibling(curr, pre, next) {
-    curr.pre = pre || null
-    curr.next = next || null
-  }
 
 
   // 根据一级json更新每个节点的高度
@@ -505,15 +347,6 @@ export default class Painter {
   }
 
 
-  // 获取某部分高度之和
-  getBlockHeight(ids = [], isGlobal = false) {
-    if (isGlobal) { return 786; }
-    const filterd = this.data.views.filter((view) => { return ids.includes(view._id); });
-    const res = filterd.reduce((pre, next) => {
-      return pre + next.processedLocation.height;
-    }, 0);
-    return res;
-  }
 
   /**
    * 画背景
@@ -765,62 +598,62 @@ export default class Painter {
        
         break;
     }
-    let x;
-    if (view.css && view.css.right) {
-      if (typeof view.css.right === 'string') {
-        x = this.style.width - view.css.right.toPx(true);
-      } else {
-        // 可以用数组方式，把文字长度计算进去
-        // [right, 文字id, 乘数（默认 1）]
-        // [right, [文字id1, 文字id2, 文字id3], 乘数（默认 1）]
-        const rights = view.css.right;
-        x = this.style.width - rights[0].toPx(true) - this.globalWidth[rights[1]] * (rights[2] || 1);
-      }
-    } else if (view.css && view.css.left) {
-      // debugger
-      if (typeof view.css.left === 'string') {
-        x = view.css.left.toPx(true);
-      } else {
-        const lefts = view.css.left;
+    // let x;
+    // if (view.css && view.css.right) {
+    //   if (typeof view.css.right === 'string') {
+    //     x = this.style.width - view.css.right.toPx(true);
+    //   } else {
+    //     // 可以用数组方式，把文字长度计算进去
+    //     // [right, 文字id, 乘数（默认 1）]
+    //     // [right, [文字id1, 文字id2, 文字id3], 乘数（默认 1）]
+    //     const rights = view.css.right;
+    //     x = this.style.width - rights[0].toPx(true) - this.globalWidth[rights[1]] * (rights[2] || 1);
+    //   }
+    // } else if (view.css && view.css.left) {
+    //   // debugger
+    //   if (typeof view.css.left === 'string') {
+    //     x = view.css.left.toPx(true);
+    //   } else {
+    //     const lefts = view.css.left;
 
-        if (Array.isArray(lefts[1])) {
-          const dynamicWidth = lefts[1].reduce((pre, next) => {
-            return pre + this.globalWidth[next];
-          }, 0);
-          x = lefts[0].toPx(true) + dynamicWidth * (lefts[2] || 1);
-        } else {
-          x = lefts[0].toPx(true) + this.globalWidth[lefts[1]] * (lefts[2] || 1);
-        }
-        // debugger
-      }
-    } else {
-      x = 0;
-    }
-    // const y = view.css && view.css.bottom ? this.style.height - height - view.css.bottom.toPx(true) : (view.css && view.css.top ? view.css.top.toPx(true) : 0);
-    let y;
-    if (view.css && view.css.bottom) {
-      y = this.style.height - height - view.css.bottom.toPx(true);
-    } else {
-      if (view.css && view.css.top) {
-        // debugger;
-        if (typeof view.css.top === 'string') {
-          y = view.css.top.toPx(true);
-        } else {
-          const tops = view.css.top;
-          if (Array.isArray(tops[1])) {
-            const dynamicHeight = tops[1].reduce((pre, next) => {
-              return pre + this.globalHeight[next];
-            }, 0);
-            y = tops[0].toPx(true) + dynamicHeight * (tops[2] || 1);
-          } else {
-            y = tops[0].toPx(true) + this.globalHeight[tops[1]] * (tops[2] || 1);
-          }
-          // debugger
-        }
-      } else {
-        y = 0;
-      }
-    }
+    //     if (Array.isArray(lefts[1])) {
+    //       const dynamicWidth = lefts[1].reduce((pre, next) => {
+    //         return pre + this.globalWidth[next];
+    //       }, 0);
+    //       x = lefts[0].toPx(true) + dynamicWidth * (lefts[2] || 1);
+    //     } else {
+    //       x = lefts[0].toPx(true) + this.globalWidth[lefts[1]] * (lefts[2] || 1);
+    //     }
+    //     // debugger
+    //   }
+    // } else {
+    //   x = 0;
+    // }
+    // // const y = view.css && view.css.bottom ? this.style.height - height - view.css.bottom.toPx(true) : (view.css && view.css.top ? view.css.top.toPx(true) : 0);
+    // let y;
+    // if (view.css && view.css.bottom) {
+    //   y = this.style.height - height - view.css.bottom.toPx(true);
+    // } else {
+    //   if (view.css && view.css.top) {
+    //     // debugger;
+    //     if (typeof view.css.top === 'string') {
+    //       y = view.css.top.toPx(true);
+    //     } else {
+    //       const tops = view.css.top;
+    //       if (Array.isArray(tops[1])) {
+    //         const dynamicHeight = tops[1].reduce((pre, next) => {
+    //           return pre + this.globalHeight[next];
+    //         }, 0);
+    //         y = tops[0].toPx(true) + dynamicHeight * (tops[2] || 1);
+    //       } else {
+    //         y = tops[0].toPx(true) + this.globalHeight[tops[1]] * (tops[2] || 1);
+    //       }
+    //       // debugger
+    //     }
+    //   } else {
+    //     y = 0;
+    //   }
+    // }
 
 
     if (view.id) {
@@ -830,8 +663,8 @@ export default class Painter {
     return {
       width,
       height,
-      x,
-      y,
+      x:0,
+      y:0,
       extra,
     };
   }
