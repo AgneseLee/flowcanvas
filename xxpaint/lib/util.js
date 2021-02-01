@@ -166,7 +166,6 @@ function breadthFirstSearch(node) {
  */
 function formatPaddingMargin(css, parent) {
   const copy = JSON.parse(JSON.stringify(css))
-  // const {  } = copy
   const arr = ["paddingLeft", "marginLeft", "paddingTop", "marginTop", "paddingRight", "paddingBottom", "marginRight", "marginBottom"]
   for (const name of arr) {
     // const attribute = copy[name]
@@ -221,6 +220,23 @@ function formatToNum(_w, parent, sizeName) {
   return width
 }
 
+function deepFirstSearch(node, fn) {
+  var nodes = [];
+  if (node != null) {
+      var stack = [];
+      stack.push(node);
+      while (stack.length != 0) {
+      var item = stack.pop();
+      fn && fn.call(null, item)
+      nodes.push(item);
+      var children = item.children;
+      for (var i = children.length - 1; i >= 0; i--)
+          stack.push(children[i]);
+      }
+  }
+  return nodes;
+}
+
 
 module.exports = {
   isValidUrl,
@@ -230,6 +246,7 @@ module.exports = {
   breadthFirstSearchRight,
   breadthFirstSearch,
   formatPaddingMargin,
-  formatToNum
+  formatToNum,
+  deepFirstSearch
 };
 

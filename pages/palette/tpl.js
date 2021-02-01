@@ -216,7 +216,7 @@ export default class ImageExample {
                             height: '20px',
                             background: '#F4A460',
                             color:'#F4A460',
-                            // marginRight:'40px'
+                            marginTop:'40px'
                         },
                         children:[
                             {

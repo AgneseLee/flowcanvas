@@ -1,12 +1,69 @@
 import Downloader from './downloader';
 // import TreeNode from './treeNode'
-import { breadthFirstSearchRight, breadthFirstSearch,formatToNum } from './util'
+import { breadthFirstSearchRight, breadthFirstSearch, formatToNum, deepFirstSearch } from './util'
 const GD = require('./gradient.js');
 // const Modifier = require('./modifier').default;
 // const downloader = new Downloader();
 import { initVnodeTree } from './vnode'
-import {insertVnodeIntoLine} from './line'
-import {getIsChangeLine, getPreLayout} from './layout'
+import { insertVnodeIntoLine } from './line'
+import { getIsChangeLine, getPreLayout } from './layout'
+import xmlParse from './xml-parser'
+const wxml = `
+<rect class="container" >
+  <rect class="item-box red">
+  </rect>
+  <block class="item-box green" >
+    <text class="text container">yeah!</text>
+  </block>
+  <rect class="item-box blue">
+      <image class="img" src="https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=3582589792,4046843010&fm=26&gp=0.jpg"></image>
+  </rect>
+</rect>
+`
+const style = {
+  container: {
+    color: 'rgba(0,0,0,0.9)',
+    background: '#BEBEBE',
+    width: '302px',
+    rotate: '0',
+    borderRadius: '',
+    borderWidth: '',
+    borderColor: '#000000',
+    shadow: '',
+    padding: '0px',
+    // padding:'3px 9px  38px 9px',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    maxLines: '2',
+    lineHeight: '28px',
+    textStyle: 'fill',
+    textDecoration: 'none',
+    fontFamily: '',
+    textAlign: 'left',
+    // marginLeft:'40px',
+    paddingLeft: '0px',
+    paddingTop: '0px',
+  },
+  text:{
+    fontSize:'28px',
+    hhh:'oo'
+  }
+}
+
+const { root: xom } = xmlParse(wxml)
+console.log(xom)
+addStyle(xom, style)
+
+function addStyle(xom, style) {
+  const domList = deepFirstSearch(xom, (node) => {
+    const classNames = node.attributes.class.split(' ')
+    const allCss = classNames.reduce((pre, next) => {
+      return Object.assign({}, pre, style[next])
+    }, {})
+    node.css = allCss
+  })
+  console.log('--= ', domList)
+}
 
 
 const defaultPaddingMargin = {
@@ -62,7 +119,7 @@ export default class Painter {
   }
 
   transformNTo1() {
-  
+
     initVnodeTree(this.data)
     const tplTo1 = this.data
     // debugger
@@ -595,7 +652,7 @@ export default class Painter {
 
         width = formatToNum(view.css.width, view.parent, 'width')
         height = formatToNum(view.css.height, view.parent, 'height')
-       
+
         break;
     }
     // let x;
@@ -663,8 +720,8 @@ export default class Painter {
     return {
       width,
       height,
-      x:0,
-      y:0,
+      x: 0,
+      y: 0,
       extra,
     };
   }
