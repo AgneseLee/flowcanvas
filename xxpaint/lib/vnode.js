@@ -1,3 +1,5 @@
+import xmlParse from './xml-parser'
+import { deepFirstSearch } from './util'
 
 /**
  * 创建虚拟节点
@@ -11,10 +13,10 @@ export const createVnode = (node) => {
         type: node.type,
         css: node.css || {},
         islines: false, //是否换行
-        layoutSize: { height: 0, width: 0 }, // 绘制宽高
+        // layoutSize: { height: 0, width: 0 }, // 绘制宽高
         renderStyle: { x: 0, y: 0, contentX: 0, contentY: 0 }, // 绘制位置
         children: node.children || [],
-        lines:[],
+        lines: [],
         parent: null,
         pre: null,
         next: null
@@ -32,7 +34,7 @@ export const connectChildren = (el, isRoot = true) => {
         _getChildren(el).forEach((child, index) => {
             // 继承父节点样式
             child.css = _inheritStyle(el, child)
-// debugger
+            // debugger
             // 设置parent
             _setParent(child, el, isRoot)
             isRoot = false
@@ -55,7 +57,6 @@ export const initVnodeTree = (node) => {
         while (queue.length != 0) {
             var item = queue.shift();
             item = createVnode(item)
-            item.check = true;
             nodes.push(item);
             var children = item.children || [];
             for (var i = 0; i < children.length; i++)
@@ -105,4 +106,43 @@ function _inheritStyle(parent, child) {
     }
     const style = Object.assign({}, copyParentCss, child.css)
     return style
+}
+
+/**
+ * 在转换成node的树级结构中添加css/text/url, 对齐渲染所需属性
+ * @param {object} xom 
+ * @param {object} style 
+ */
+function _formatVnode(xom, style) {
+    deepFirstSearch(xom, (node) => {
+        const classNames = node.attributes.class.split(' ')
+        // 样式
+        const css = classNames.reduce((pre, next) => {
+            return Object.assign({}, pre, style[next])
+        }, {})
+        node.css = css
+        // 图片
+        if (node.attributes.class === 'img' && node.attributes.src) {
+            node.url = node.attributes.src
+        }
+        // 文字
+        if (node.name === 'text') {
+            node.text = node.content;
+        }
+        node.type = node.name
+        createVnode(node)
+    })
+     // 关联父子兄弟节点和样式继承
+     connectChildren(xom)
+}
+
+/**
+ * 从模板转换成vnode对象树
+ * @param {string} wxml html模板
+ * @param {object} style css对象
+ */
+export const xmlToVnode = (wxml, style) => {
+    const { root: xom } = xmlParse(wxml)
+    _formatVnode(xom, style)
+    return xom;
 }
