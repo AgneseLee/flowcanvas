@@ -1,10 +1,10 @@
 import Pen from './lib/pen';
-import Downloader from './lib/downloader';
+import { downloadImages } from './lib/image'
 import { canUseNewCanvas } from './lib/util';
 import { createTree } from './lib/tree'
 const util = require('./lib/util');
 
-const downloader = new Downloader();
+
 
 // 最大尝试的绘制次数
 const MAX_PAINT_COUNT = 5;
@@ -90,7 +90,7 @@ Component({
       return true;
     },
 
-    startPaint() {
+    async startPaint() {
       if (this.isEmpty(this.properties.palette)) {
         return;
       }
@@ -109,47 +109,45 @@ Component({
       const screenK = wx.getSystemInfoSync().screenWidth / 750;
       setStringPrototype(screenK, 1);
 
-      this.downloadImages().then(async (palette) => {
-        // debugger
-        const {
-          width,
-          height
-        } = palette.children[0].css;
+      const {
+        width,
+        height
+      } = this.properties.palette.children[0].css;
 
-        if (!width || !height) {
-          console.error(`You should set width and height correctly for painter, width: ${width}, height: ${height}`);
-          return;
-        }
+      if (!width || !height) {
+        console.error(`You should set width and height correctly for painter, width: ${width}, height: ${height}`);
+        return;
+      }
 
-        const calcTpl = await this.getCalcTpl(palette);
-        this.data.calcTpl = calcTpl;
-        const { width: calcWidth, height: calcHeight } = calcTpl.children[0].processedLocation;
+      const calcTpl = await this.getCalcTpl(this.properties.palette);
+      this.data.calcTpl = calcTpl;
+      const { width: calcWidth, height: calcHeight } = calcTpl.children[0].processedLocation;
 
-        // debugger;
+      // debugger;
 
-        // ---------begin----------- 用作展示canvas，不影响最后保存的图片;这里只为了和图片保证1v1的展示比例
-        this.canvasStyleWidthInPx = calcWidth
-        this.canvasStyleHeightInPx = calcHeight
-        if (this.properties.widthPixels) {
-          // 如果重新设置过像素宽度，则重新设置比例
-          setStringPrototype(screenK, this.properties.widthPixels / this.canvasStyleWidthInPx);
-          this.canvasStyleWidthInPx = this.properties.widthPixels;
-        }
-        this.setData({
-          painterStyle: `width:${this.canvasStyleWidthInPx}px;height:${this.canvasStyleHeightInPx}px;position: fixed;top:0px;`,
-        });
-        // ---------end-----------
-
-        const innerpalette = await this.initCanvasNew(this.data.calcTpl);
-        const _palette = innerpalette;
-        const ctx = this.data.canvasCtx;
-        const canvasNode = this.data.canvasNode;
-        const pen = new Pen(ctx, { ..._palette, caniuse: this.data.caniuse, _canvas: canvasNode });
-        pen.paint(() => {
-          // canvasNode.height = (this.data.realAllH) * 3;
-          // this.saveImgToLocal();
-        });
+      // ---------begin----------- 用作展示canvas，不影响最后保存的图片;这里只为了和图片保证1v1的展示比例
+      this.canvasStyleWidthInPx = calcWidth
+      this.canvasStyleHeightInPx = calcHeight
+      if (this.properties.widthPixels) {
+        // 如果重新设置过像素宽度，则重新设置比例
+        setStringPrototype(screenK, this.properties.widthPixels / this.canvasStyleWidthInPx);
+        this.canvasStyleWidthInPx = this.properties.widthPixels;
+      }
+      this.setData({
+        painterStyle: `width:${this.canvasStyleWidthInPx}px;height:${this.canvasStyleHeightInPx}px;position: fixed;top:0px;`,
       });
+      // ---------end-----------
+
+      const innerpalette = await this.initCanvasNew(this.data.calcTpl);
+      const _palette = innerpalette;
+      const ctx = this.data.canvasCtx;
+      const canvasNode = this.data.canvasNode;
+      const pen = new Pen(ctx, { ..._palette, caniuse: this.data.caniuse, _canvas: canvasNode });
+      pen.paint(() => {
+        // canvasNode.height = (this.data.realAllH) * 3;
+        // this.saveImgToLocal();
+      });
+      // });
     },
 
     /**
@@ -170,7 +168,7 @@ Component({
               this.data.canvasCtx = ctx;
               const pen = new Pen(ctx, { ...palette, caniuse: this.data.caniuse, _canvas: canvasNode });
               this.data.pen = pen;
-              const layout = pen.beforePaint();
+              const layout = await pen.beforePaint();
               resolve(layout);
             });
         } catch (err) {
@@ -202,58 +200,6 @@ Component({
     },
 
 
-    downloadImages() {
-      return new Promise((resolve, reject) => {
-        let preCount = 0;
-        let completeCount = 0;
-        const paletteCopy = JSON.parse(JSON.stringify(this.properties.palette));
-
-        const targetNode = paletteCopy.children[0];
-        (function dfs(view) {
-          if (!view) return false;
-          if (view && view.type === 'image' && view.url) {
-            preCount++;
-            /* eslint-disable no-loop-func */
-            downloader.download(view.url).then((path) => {
-              view.url = path;
-
-              wx.getImageInfo({
-                src: view.url,
-                success: (res) => {
-                  // 获得一下图片信息，供后续裁减使用
-                  view.sWidth = res.width;
-                  view.sHeight = res.height;
-                },
-                fail: (error) => {
-                  // 如果图片坏了，则直接置空，防止坑爹的 canvas 画崩溃了
-                  view.url = '';
-                  console.error(`getImageInfo ${view.url} failed, ${JSON.stringify(error)}`);
-                },
-                complete: () => {
-                  completeCount++;
-                  if (preCount === completeCount) {
-                    resolve(paletteCopy);
-                  }
-                },
-              });
-            }, () => {
-              completeCount++;
-              if (preCount === completeCount) {
-                resolve(paletteCopy);
-              }
-            });
-          }
-          if (view.children && view.children.length) {
-            for (const child of view.children) {
-              dfs(child);
-            }
-          }
-        }(targetNode));
-        if (preCount === 0) {
-          resolve(paletteCopy);
-        }
-      });
-    },
 
     saveImgToLocal() {
       const that = this;

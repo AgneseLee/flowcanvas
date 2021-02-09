@@ -1,4 +1,4 @@
-import Downloader from './downloader';
+// import Downloader from './downloader';
 // import TreeNode from './treeNode'
 import { breadthFirstSearchRight, breadthFirstSearch, formatToNum } from './util'
 const GD = require('./gradient.js');
@@ -8,7 +8,7 @@ import { initVnodeTree, xmlToVnode } from './vnode'
 import { insertVnodeIntoLine } from './line'
 import { getIsChangeLine, getPreLayout } from './layout'
 import { wxml, style } from './htmlTpl'
-
+import { downloadImages } from './image'
 
 
 const defaultPaddingMargin = {
@@ -33,9 +33,10 @@ export default class Painter {
     // this._preProcessed = {}; // 预处理计算出的每个元素的位置
   }
 
-  beforePaint() {
+ async beforePaint() {
+
     // 从n级转换成一级json模板
-    this.transformNTo1();
+   await this.transformNTo1();
 
     // 开始继承css
 
@@ -64,18 +65,19 @@ export default class Painter {
     }
   }
 
-  transformNTo1() {
-// this.data
-// debugger
+ async transformNTo1() {
+    // this.data
+    // debugger
     // initVnodeTree(this.data)
     const rr = xmlToVnode(wxml, style)
     console.log('** ', rr)
-    this.data.children[0]=rr
+    this.data.children[0] = rr
     const tplTo1 = this.data
     // debugger
     console.log('--- ', tplTo1)
 
-  
+    // 下载所有用到的图片
+    await downloadImages(tplTo1)
 
     // 计算每个节点的宽高
     this.calcElementWidthHeight(tplTo1.children[0])
@@ -581,6 +583,7 @@ export default class Painter {
             view.css.height = 'auto';
           }
         }
+
         if (!view.css || (view.css.width === 'auto' && view.css.height === 'auto')) {
           width = Math.round(view.sWidth / ratio);
           height = Math.round(view.sHeight / ratio);
@@ -672,8 +675,8 @@ export default class Painter {
     return {
       width,
       height,
-      x: 0,
-      y: 0,
+      // x: 0,
+      // y: 0,
       extra,
     };
   }

@@ -1,19 +1,30 @@
 const wxml = `
 <rect class="wrapper" >
   <rect class="container">
-    <text class="text">子节点1-1</text>
-    <text class="text">子节点1-2</text>
-    <text class="text">子节点1-3</text>
-    <text class="text">子节点1-4</text>
-    <text class="text">子节点1-5</text>
+    <text class="text color1">子节点1-1</text>
+    <text class="text color2">子节点1-2</text>
+    <text class="text color3">子节点1-3</text>
+    <text class="text color4">子节点1-4</text>
+    <text class="text color5">子节点1-5</text>
   </rect>
+  <image class="img" src="/pages/palette/default_goods.png"></image>
   <block class="bloo" >
     <text class="text2">block子节点4-1</text>
     <text class="text2">block子节点4-2</text>
   </block>
   <rect class="container transparent">
-      <image class="img" src="/pages/palette/default_goods.png"></image>
   </rect>
+
+</rect>
+`
+const wxml2 = `
+<rect class="wrapper" >
+  <rect class="container">
+    <text class="text color1">子节点1-1</text>
+   
+  </rect>
+  <image class="img" src="/pages/palette/default_goods.png"></image>
+
 </rect>
 `
 const style = {
@@ -82,7 +93,7 @@ const style = {
         fontFamily: '',
         textAlign: 'left',
         paddingTop: '0px',
-        marginLeft: '80px',
+        // marginLeft: '80px',
     },
     text2: {
         color: 'rgba(0,0,0,0.9)',
@@ -106,17 +117,23 @@ const style = {
         marginTop: '10px',
         marginLeft: '18px'
     },
-    transparent:{
-        color:'rgba(0,0,0,.1)'
+    transparent: {
+        color: 'rgba(0,0,0,.1)'
     },
-    image: {
-        width: '350px',
-        height: '350px',
+    img: {
+        width: '120px',
+        height: '120px',
         mode: 'aspectFill',
         borderRadius: '0px',
         marginTop: '10px',
 
     },
+    color1: { background: '#87CEFA' },
+    color2: { background: '#4682B4' },
+    color3: { background: '#548B54' },
+    color4: { background: '#9BCD9B' },
+    color5: { background: '#FF8247' },
+
 }
 
 module.exports.wxml = wxml
