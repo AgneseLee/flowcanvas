@@ -29,13 +29,15 @@ export const createVnode = (node) => {
  * @param {Vnode} el 
  */
 
-export const connectChildren = (el, isRoot = true) => {
+export const connectChildren = (el, isRoot = false) => {
+    // debugger
     if (hasChildren(el)) {
         _getChildren(el).forEach((child, index) => {
             // 继承父节点样式
             child.css = _inheritStyle(el, child)
             // debugger
             // 设置parent
+            // debugger
             _setParent(child, el, isRoot)
             isRoot = false
             // 设置了上一个兄弟节点

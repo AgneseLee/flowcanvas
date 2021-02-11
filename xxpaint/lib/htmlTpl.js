@@ -1,4 +1,4 @@
-const wxml = `
+const wxml2 = `
 <rect class="wrapper" >
   <rect class="container">
     <text class="text color1">子节点1-1</text>
@@ -12,18 +12,16 @@ const wxml = `
     <text class="text2">block子节点4-1</text>
     <text class="text2">block子节点4-2</text>
   </block>
-  <rect class="container transparent">
-  </rect>
-
+  <rect class="container transparent"></rect>
 </rect>
 `
-const wxml2 = `
+const wxml = `
 <rect class="wrapper" >
-  <rect class="container">
-    <text class="text color1">子节点1-1</text>
-   
-  </rect>
-  <image class="img" src="/pages/palette/default_goods.png"></image>
+<image class="img" src="/pages/palette/default_goods.png"></image>
+<block class="bloo" >
+  <text class="text2">block子节点4-1</text>
+  <text class="text2">block子节点4-2</text>
+</block>
 
 </rect>
 `
@@ -34,7 +32,7 @@ const style = {
         // background:'#EEE685',
         color: '#EEB4B4',
         width: '350px',
-        height: '528px',
+        height: '0px',
         top: '56px',
         left: '32px',
         rotate: '0',
@@ -73,7 +71,7 @@ const style = {
         height: '20px',
         background: '#F4A460',
         color: '#F4A460',
-        marginTop: '40px'
+        marginTop: '10px'
     },
     text: {
         color: 'rgba(0,0,0,0.9)',
@@ -125,7 +123,7 @@ const style = {
         height: '120px',
         mode: 'aspectFill',
         borderRadius: '0px',
-        marginTop: '10px',
+        marginTop: '50px',
 
     },
     color1: { background: '#87CEFA' },

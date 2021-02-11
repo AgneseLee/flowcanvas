@@ -33,10 +33,10 @@ export default class Painter {
     // this._preProcessed = {}; // 预处理计算出的每个元素的位置
   }
 
- async beforePaint() {
+  async beforePaint() {
 
     // 从n级转换成一级json模板
-   await this.transformNTo1();
+    await this.transformNTo1();
 
     // 开始继承css
 
@@ -65,7 +65,7 @@ export default class Painter {
     }
   }
 
- async transformNTo1() {
+  async transformNTo1() {
     // this.data
     // debugger
     // initVnodeTree(this.data)
@@ -81,7 +81,7 @@ export default class Painter {
 
     // 计算每个节点的宽高
     this.calcElementWidthHeight(tplTo1.children[0])
-    // debugger
+
     // 计算每个节点位置
     const nodes = this.calcElementPosition(tplTo1.children[0])
     this.data.views = nodes
@@ -90,7 +90,9 @@ export default class Painter {
 
   calcElementWidthHeight(rootNode) {
     const reverseBfsNodes = breadthFirstSearchRight(rootNode)
+    
     for (let i = 0; i < reverseBfsNodes.length; i++) {
+      // let widthSum = 0, heightSum = 0, isLines = false
       this.preProcessObj(reverseBfsNodes[i]);
       // inline-block宽高靠子节点撑大
       if (['view', 'rect'].includes(reverseBfsNodes[i].type)) {
@@ -108,10 +110,12 @@ export default class Painter {
 
           const xAdder = childWidth + childPaddingLeft + childMarginLeft
           const yAdder = childHeight + childMarginTop + childPaddingTop
+       
+          isLines = children[j].type==='block'
           if (!isLines) {
             // 不换行
             widthSum += (xAdder)
-            // 
+            // debugger
             if (widthSum >= parentWidth && j === 0) {
               // reverseBfsNodes[i].processedLocation.width = widthSum
               isLines = true;
@@ -123,17 +127,17 @@ export default class Painter {
               isLines = false
               heightSum += yAdder
             }
-            // reverseBfsNodes[i].lines
-            reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
+      
           } else {
             // 换行
             heightSum += yAdder
             isLines = false
             widthSum = 0
-            reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
+            // reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
           }
-          // reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
         }
+        reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
+        console.log(reverseBfsNodes[i].processedLocation.height)
       } else if (reverseBfsNodes[i].type === 'block') {
         // 块级元素
         // 宽度拉满画布,高度定高或者自适应
@@ -179,11 +183,7 @@ export default class Painter {
               isLines = false
               widthSum = 0
               reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
-              // debugger
             }
-            // reverseBfsNodes[i].processedLocation.height = Math.max(heightSum, reverseBfsNodes[i].processedLocation.height)
-
-
           }
         } else {
           // 定高
@@ -193,6 +193,7 @@ export default class Painter {
 
       }
     }
+
     // debugger
     console.log('(((((( ', reverseBfsNodes)
     return reverseBfsNodes
@@ -213,7 +214,8 @@ export default class Painter {
         continue;
       }
       const isLines = getIsChangeLine(bfsNodes[i])
-      insertVnodeIntoLine(bfsNodes[i], isLines)
+      // debugger
+      this.insertVnode(bfsNodes[i], isLines)
       // debugger
       // if (isLines) {
       //   // 换行时, y:叠加pre兄弟节点坐标, x:叠加父节点坐标
@@ -244,6 +246,28 @@ export default class Painter {
     return bfsNodes
   }
 
+  insertVnode(vnode, isChangeLine) {
+    if (['block'].includes(vnode.type)) {
+      // 块级元素
+      const { paddingLeft, marginLeft, paddingTop, marginTop } = Object.assign({}, defaultPaddingMargin, vnode.css)
+      // 换行时, y:叠加pre兄弟节点坐标, x:叠加父节点坐标
+      // debugger
+      const x = vnode.parent.renderStyle.contentX
+      const y = getPreLayout(vnode).y + getPreLayout(vnode).height
+      const renderStyle = {
+        x,
+        y,
+        // contentX: x + formatToPx(paddingLeft) + formatToPx(marginLeft),
+        // contentY: y + formatToPx(paddingTop) + formatToPx(marginTop)
+        contentX: x + formatToNum(paddingLeft, vnode.parent, 'width') + formatToNum(marginLeft, vnode.parent, 'width'),
+        contentY: y + formatToNum(paddingTop, vnode.parent, 'height') + formatToNum(marginTop, vnode.parent, 'height')
+      }
+      vnode.renderStyle = renderStyle;
+    } else {
+      // 行内元素
+      insertVnodeIntoLine(vnode, isChangeLine)
+    }
+  }
 
 
 
