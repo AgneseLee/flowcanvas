@@ -33,16 +33,22 @@ export const connectChildren = (el, isRoot = false) => {
     // debugger
     if (hasChildren(el)) {
         _getChildren(el).forEach((child, index) => {
-            // 继承父节点样式
-            child.css = _inheritStyle(el, child)
-            // debugger
-            // 设置parent
-            // debugger
-            _setParent(child, el, isRoot)
-            isRoot = false
-            // 设置了上一个兄弟节点
-            _setSibling(child, _getChildren(el)[index - 1], _getChildren(el)[index + 1])
-            connectChildren(child, isRoot)
+            if (child.attributes['p-if'] === 'false') { 
+                // console.log(el)
+                // _delNode(el, child)
+            }
+            else {
+                // 继承父节点样式
+                child.css = _inheritStyle(el, child)
+                // debugger
+                // 设置parent
+                // debugger
+                _setParent(child, el, isRoot)
+                isRoot = false
+                // 设置了上一个兄弟节点
+                _setSibling(child, _getChildren(el)[index - 1], _getChildren(el)[index + 1])
+                connectChildren(child, isRoot)
+            }
         })
     }
 }
@@ -81,7 +87,11 @@ function hasChildren(vnode) {
 function _getChildren(el) {
     return hasChildren(el) ? el.children : []
 }
-
+function _delNode(parent,child) {
+    // const parent = el.parent
+    const idx = parent.children.findIndex(x => x === child)
+    parent.children.splice(idx, 1)
+}
 
 function _setParent(curr, element, isRoot) {
     curr.parent = isRoot ? null : element
@@ -118,6 +128,7 @@ function _inheritStyle(parent, child) {
 function _formatVnode(xom, style) {
     deepFirstSearch(xom, (node) => {
         const classNames = node.attributes.class.split(' ')
+     
         // 样式
         const css = classNames.reduce((pre, next) => {
             return Object.assign({}, pre, style[next])
@@ -132,10 +143,11 @@ function _formatVnode(xom, style) {
             node.text = node.content;
         }
         node.type = node.name
+
         createVnode(node)
     })
-     // 关联父子兄弟节点和样式继承
-     connectChildren(xom)
+    // 关联父子兄弟节点和样式继承
+    connectChildren(xom)
 }
 
 /**
@@ -145,6 +157,7 @@ function _formatVnode(xom, style) {
  */
 export const xmlToVnode = (wxml, style) => {
     const { root: xom } = xmlParse(wxml)
+    // console.log('## ', xom)
     _formatVnode(xom, style)
     return xom;
 }
