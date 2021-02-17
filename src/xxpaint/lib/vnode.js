@@ -126,7 +126,7 @@ function _inheritStyle(parent, child) {
  */
 function _formatVnode2(xom, style) {
   deepFirstSearch(xom, (node) => {
-    console.log('^^ ', node)
+    // console.log('^^ ', node)
     // 样式
     if(node.attributes.class){
       const classNames = node.attributes.class.split(' ');
@@ -153,7 +153,7 @@ function _formatVnode2(xom, style) {
 
 function _formatVnode(xom, style) {
   deepFirstSearch(xom, (node) => {
-    console.log('^^ ', node)
+    // console.log('^^ ', node)
     // 样式
     if(node.attributes.class){
       const classNames = node.attributes.class.split(' ');
