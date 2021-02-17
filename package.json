@@ -1,0 +1,44 @@
+{
+  "name": "painter-program",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.12.13",
+    "@babel/plugin-transform-runtime": "^7.12.13",
+    "@babel/preset-env": "^7.12.13",
+    "@babel/preset-react": "^7.12.13",
+    "@babel/runtime": "^7.12.13",
+    "del": "^5.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.20.1",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-eslint": "^6.0.0",
+    "gulp-less": "^4.0.1",
+    "gulp-postcss": "^8.0.0",
+    "gulp-react": "^4.0.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-uglify": "^3.0.2",
+    "miniprogram-ci": "^1.0.98"
+  },
+  "scripts": {
+    "dev": "gulp watch --watch",
+    "build": "gulp build",
+    "fix": "gulp fix",
+    "useNpm": "node ./useNpm.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgneseLee/flowcanvas.git"
+  },
+  "author": "agneslee",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AgneseLee/flowcanvas/issues"
+  },
+  "homepage": "https://github.com/AgneseLee/flowcanvas#readme"
+}
