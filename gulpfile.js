@@ -25,7 +25,8 @@ const imgFiles = [
   `${srcPath}/**/*.{png,jpg,svg,gif,ico}`,
   `${srcPath}/**/**/*.{png,jpg,svg,gif,ico}`,
 ];
-const jsFiles = [`${srcPath}/**/**/*.js`, `${srcPath}/**/**/*.jsx`];
+const tsFiles = [`${srcPath}/**/*.ts`, `${srcPath}/**/*.tsx`];
+const jsFiles = [`${srcPath}/**/*.js`, `${srcPath}/**/*.jsx`];
 const jsxFiles = [`${srcPath}/**/**/*.jsx`];
 const wxssFiles = [`${srcPath}/**/**/*.wxss`];
 const ignoreFiles = ['./src/weui-wxss/**'];
@@ -44,7 +45,7 @@ const Lint = () => {
 };
 
 const LintFix = () => {
-  return gulp.src(jsFiles)
+  return gulp.src(tsFiles)
     .pipe(gulpEslint({
       fix: true,
     }))

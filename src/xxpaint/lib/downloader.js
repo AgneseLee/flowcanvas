@@ -1,234 +1,206 @@
-/* eslint-disable */
-/**
- * LRU 文件存储，使用该 downloader 可以让下载的文件存储在本地，下次进入小程序后可以直接使用
- * 详细设计文档可查看 https://juejin.im/post/5b42d3ede51d4519277b6ce3
- */
-const util = require('./util');
-
-const SAVED_FILES_KEY = 'savedFiles';
-const KEY_TOTAL_SIZE = 'totalSize';
-const KEY_PATH = 'path';
-const KEY_TIME = 'time';
-const KEY_SIZE = 'size';
-
-// 可存储总共为 6M，目前小程序可允许的最大本地存储为 10M
-const MAX_SPACE_IN_B = 6 * 1024 * 1024;
-let savedFiles = {};
-
-export default class Dowloader {
-  constructor() {
-    // app 如果设置了最大存储空间，则使用 app 中的
-    // if (getApp().PAINTER_MAX_LRU_SPACE) {
-    //   MAX_SPACE_IN_B = getApp().PAINTER_MAX_LRU_SPACE;
-    // }
-    wx.getStorage({
-      key: SAVED_FILES_KEY,
-      success(res) {
-        if (res.data) {
-          savedFiles = res.data;
-        }
-      },
-    });
-  }
-
-  /**
-   * 下载文件，会用 lru 方式来缓存文件到本地
-   * @param {String} url 文件的 url
-   */
-  download(url) {
-    return new Promise((resolve, reject) => {
-      if (!(url && util.isValidUrl(url))) {
-        resolve(url);
-        return;
-      }
-      const file = getFile(url);
-
-      if (file) {
-        // 检查文件是否正常，不正常需要重新下载
-        wx.getSavedFileInfo({
-          filePath: file[KEY_PATH],
-          success: (res) => {
-            resolve(file[KEY_PATH]);
-          },
-          fail: (error) => {
-            console.error(`the file is broken, redownload it, ${JSON.stringify(error)}`);
-            downloadFile(url).then((path) => {
-              resolve(path);
-            }, () => {
-              reject();
-            });
-          },
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var util = require('./util');
+var SAVED_FILES_KEY = 'savedFiles';
+var KEY_TOTAL_SIZE = 'totalSize';
+var KEY_PATH = 'path';
+var KEY_TIME = 'time';
+var KEY_SIZE = 'size';
+var MAX_SPACE_IN_B = 6 * 1024 * 1024;
+var savedFiles = {};
+var Dowloader = (function () {
+    function Dowloader() {
+        wx.getStorage({
+            key: SAVED_FILES_KEY,
+            success: function (res) {
+                if (res.data) {
+                    savedFiles = res.data;
+                }
+            },
         });
-      } else {
-        downloadFile(url).then((path) => {
-          resolve(path);
-        }, () => {
-          reject();
-        });
-      }
-    });
-  }
-}
-
-function downloadFile(url) {
-  return new Promise((resolve, reject) => {
-    wx.downloadFile({
-      url,
-      success(res) {
-        if (res.statusCode !== 200) {
-          console.error(`downloadFile ${url} failed res.statusCode is not 200`);
-          reject();
-          return;
-        }
-        const { tempFilePath } = res;
-        try {
-          wx.getFileInfo({
-            filePath: tempFilePath,
-            success: (tmpRes) => {
-              const newFileSize = tmpRes.size;
-              doLru(newFileSize).then(() => {
-                saveFile(url, newFileSize, tempFilePath).then((filePath) => {
-                  resolve(filePath);
+    }
+    Dowloader.prototype.download = function (url) {
+        return new Promise(function (resolve, reject) {
+            if (!(url && util.isValidUrl(url))) {
+                resolve(url);
+                return;
+            }
+            var file = getFile(url);
+            if (file) {
+                wx.getSavedFileInfo({
+                    filePath: file[KEY_PATH],
+                    success: function (res) {
+                        resolve(file[KEY_PATH]);
+                    },
+                    fail: function (error) {
+                        console.error("the file is broken, redownload it, " + JSON.stringify(error));
+                        downloadFile(url).then(function (path) {
+                            resolve(path);
+                        }, function () {
+                            reject();
+                        });
+                    },
                 });
-              }, () => {
-                resolve(tempFilePath);
-              });
-            },
-            fail: (error) => {
-            // 文件大小信息获取失败，则此文件也不要进行存储
-              console.error(`getFileInfo ${res.tempFilePath} failed, ${JSON.stringify(error)}`);
-              resolve(res.tempFilePath);
-            },
-          });
-        } catch (e) {
-          // 兼容插件
-          resolve(tempFilePath);
-        }
-      },
-      fail(error) {
-        console.error(`downloadFile failed, ${JSON.stringify(error)} `);
-        reject();
-      },
-    });
-  });
-}
-
-function saveFile(key, newFileSize, tempFilePath) {
-  return new Promise((resolve, reject) => {
-    wx.saveFile({
-      tempFilePath,
-      success: (fileRes) => {
-        const totalSize = savedFiles[KEY_TOTAL_SIZE] ? savedFiles[KEY_TOTAL_SIZE] : 0;
-        savedFiles[key] = {};
-        savedFiles[key][KEY_PATH] = fileRes.savedFilePath;
-        savedFiles[key][KEY_TIME] = new Date().getTime();
-        savedFiles[key][KEY_SIZE] = newFileSize;
-        savedFiles.totalSize = newFileSize + totalSize;
-        wx.setStorage({
-          key: SAVED_FILES_KEY,
-          data: savedFiles,
+            }
+            else {
+                downloadFile(url).then(function (path) {
+                    resolve(path);
+                }, function () {
+                    reject();
+                });
+            }
         });
-        resolve(fileRes.savedFilePath);
-      },
-      fail: (error) => {
-        console.error(`saveFile ${key} failed, then we delete all files, ${JSON.stringify(error)}`);
-        // 由于 saveFile 成功后，res.tempFilePath 处的文件会被移除，所以在存储未成功时，我们还是继续使用临时文件
-        resolve(tempFilePath);
-        // 如果出现错误，就直接情况本地的所有文件，因为你不知道是不是因为哪次lru的某个文件未删除成功
-        reset();
-      },
+    };
+    return Dowloader;
+}());
+exports.default = Dowloader;
+function downloadFile(url) {
+    return new Promise(function (resolve, reject) {
+        wx.downloadFile({
+            url: url,
+            success: function (res) {
+                if (res.statusCode !== 200) {
+                    console.error("downloadFile " + url + " failed res.statusCode is not 200");
+                    reject();
+                    return;
+                }
+                var tempFilePath = res.tempFilePath;
+                try {
+                    wx.getFileInfo({
+                        filePath: tempFilePath,
+                        success: function (tmpRes) {
+                            var newFileSize = tmpRes.size;
+                            doLru(newFileSize).then(function () {
+                                saveFile(url, newFileSize, tempFilePath).then(function (filePath) {
+                                    resolve(filePath);
+                                });
+                            }, function () {
+                                resolve(tempFilePath);
+                            });
+                        },
+                        fail: function (error) {
+                            console.error("getFileInfo " + res.tempFilePath + " failed, " + JSON.stringify(error));
+                            resolve(res.tempFilePath);
+                        },
+                    });
+                }
+                catch (e) {
+                    resolve(tempFilePath);
+                }
+            },
+            fail: function (error) {
+                console.error("downloadFile failed, " + JSON.stringify(error) + " ");
+                reject();
+            },
+        });
     });
-  });
 }
-
-/**
- * 清空所有下载相关内容
- */
+function saveFile(key, newFileSize, tempFilePath) {
+    return new Promise(function (resolve, reject) {
+        wx.saveFile({
+            tempFilePath: tempFilePath,
+            success: function (fileRes) {
+                var totalSize = savedFiles[KEY_TOTAL_SIZE] ? savedFiles[KEY_TOTAL_SIZE] : 0;
+                savedFiles[key] = {};
+                savedFiles[key][KEY_PATH] = fileRes.savedFilePath;
+                savedFiles[key][KEY_TIME] = new Date().getTime();
+                savedFiles[key][KEY_SIZE] = newFileSize;
+                savedFiles.totalSize = newFileSize + totalSize;
+                wx.setStorage({
+                    key: SAVED_FILES_KEY,
+                    data: savedFiles,
+                });
+                resolve(fileRes.savedFilePath);
+            },
+            fail: function (error) {
+                console.error("saveFile " + key + " failed, then we delete all files, " + JSON.stringify(error));
+                resolve(tempFilePath);
+                reset();
+            },
+        });
+    });
+}
 function reset() {
-  wx.removeStorage({
-    key: SAVED_FILES_KEY,
-    success: () => {
-      wx.getSavedFileList({
-        success: (listRes) => {
-          removeFiles(listRes.fileList);
+    wx.removeStorage({
+        key: SAVED_FILES_KEY,
+        success: function () {
+            wx.getSavedFileList({
+                success: function (listRes) {
+                    removeFiles(listRes.fileList);
+                },
+                fail: function (getError) {
+                    console.error("getSavedFileList failed, " + JSON.stringify(getError));
+                },
+            });
         },
-        fail: (getError) => {
-          console.error(`getSavedFileList failed, ${JSON.stringify(getError)}`);
-        },
-      });
-    },
-  });
+    });
 }
-
 function doLru(size) {
-  return new Promise((resolve, reject) => {
-    let totalSize = savedFiles[KEY_TOTAL_SIZE] ? savedFiles[KEY_TOTAL_SIZE] : 0;
-
-    if (size + totalSize <= MAX_SPACE_IN_B) {
-      resolve();
-      return;
-    }
-    // 如果加上新文件后大小超过最大限制，则进行 lru
-    const pathsShouldDelete = [];
-    // 按照最后一次的访问时间，从小到大排序
-    const allFiles = JSON.parse(JSON.stringify(savedFiles));
-    delete allFiles[KEY_TOTAL_SIZE];
-    const sortedKeys = Object.keys(allFiles).sort((a, b) => {
-      return allFiles[a][KEY_TIME] - allFiles[b][KEY_TIME];
-    });
-
-    for (const sortedKey of sortedKeys) {
-      totalSize -= savedFiles[sortedKey].size;
-      pathsShouldDelete.push(savedFiles[sortedKey][KEY_PATH]);
-      delete savedFiles[sortedKey];
-      if (totalSize + size < MAX_SPACE_IN_B) {
-        break;
-      }
-    }
-
-    savedFiles.totalSize = totalSize;
-    // debugger;
-    wx.setStorage({
-      key: SAVED_FILES_KEY,
-      data: savedFiles,
-      success: () => {
-      // 保证 storage 中不会存在不存在的文件数据
-        if (pathsShouldDelete.length > 0) {
-          removeFiles(pathsShouldDelete);
+    return new Promise(function (resolve, reject) {
+        var totalSize = savedFiles[KEY_TOTAL_SIZE] ? savedFiles[KEY_TOTAL_SIZE] : 0;
+        if (size + totalSize <= MAX_SPACE_IN_B) {
+            resolve();
+            return;
         }
-        resolve();
-      },
-      fail: (error) => {
-        console.error(`doLru setStorage failed, ${JSON.stringify(error)}`);
-        reject();
-      },
+        var pathsShouldDelete = [];
+        var allFiles = JSON.parse(JSON.stringify(savedFiles));
+        delete allFiles[KEY_TOTAL_SIZE];
+        var sortedKeys = Object.keys(allFiles).sort(function (a, b) {
+            return allFiles[a][KEY_TIME] - allFiles[b][KEY_TIME];
+        });
+        for (var _i = 0, sortedKeys_1 = sortedKeys; _i < sortedKeys_1.length; _i++) {
+            var sortedKey = sortedKeys_1[_i];
+            totalSize -= savedFiles[sortedKey].size;
+            pathsShouldDelete.push(savedFiles[sortedKey][KEY_PATH]);
+            delete savedFiles[sortedKey];
+            if (totalSize + size < MAX_SPACE_IN_B) {
+                break;
+            }
+        }
+        savedFiles.totalSize = totalSize;
+        wx.setStorage({
+            key: SAVED_FILES_KEY,
+            data: savedFiles,
+            success: function () {
+                if (pathsShouldDelete.length > 0) {
+                    removeFiles(pathsShouldDelete);
+                }
+                resolve();
+            },
+            fail: function (error) {
+                console.error("doLru setStorage failed, " + JSON.stringify(error));
+                reject();
+            },
+        });
     });
-  });
 }
-
 function removeFiles(pathsShouldDelete) {
-  for (const pathDel of pathsShouldDelete) {
-    let delPath = pathDel;
-    if (typeof pathDel === 'object') {
-      delPath = pathDel.filePath;
+    var _loop_1 = function (pathDel) {
+        var delPath = pathDel;
+        if (typeof pathDel === 'object') {
+            delPath = pathDel.filePath;
+        }
+        wx.removeSavedFile({
+            filePath: delPath,
+            fail: function (error) {
+                console.error("removeSavedFile " + pathDel + " failed, " + JSON.stringify(error));
+            },
+        });
+    };
+    for (var _i = 0, pathsShouldDelete_1 = pathsShouldDelete; _i < pathsShouldDelete_1.length; _i++) {
+        var pathDel = pathsShouldDelete_1[_i];
+        _loop_1(pathDel);
     }
-    wx.removeSavedFile({
-      filePath: delPath,
-      fail: (error) => {
-        console.error(`removeSavedFile ${pathDel} failed, ${JSON.stringify(error)}`);
-      },
-    });
-  }
 }
-
 function getFile(key) {
-  if (!savedFiles[key]) {
-    return;
-  }
-  savedFiles[key].time = new Date().getTime();
-  wx.setStorage({
-    key: SAVED_FILES_KEY,
-    data: savedFiles,
-  });
-  return savedFiles[key];
+    if (!savedFiles[key]) {
+        return;
+    }
+    savedFiles[key].time = new Date().getTime();
+    wx.setStorage({
+        key: SAVED_FILES_KEY,
+        data: savedFiles,
+    });
+    return savedFiles[key];
 }
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZG93bmxvYWRlci5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImRvd25sb2FkZXIudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFLQSxJQUFNLElBQUksR0FBRyxPQUFPLENBQUMsUUFBUSxDQUFDLENBQUM7QUFFL0IsSUFBTSxlQUFlLEdBQUcsWUFBWSxDQUFDO0FBQ3JDLElBQU0sY0FBYyxHQUFHLFdBQVcsQ0FBQztBQUNuQyxJQUFNLFFBQVEsR0FBRyxNQUFNLENBQUM7QUFDeEIsSUFBTSxRQUFRLEdBQUcsTUFBTSxDQUFDO0FBQ3hCLElBQU0sUUFBUSxHQUFHLE1BQU0sQ0FBQztBQUd4QixJQUFNLGNBQWMsR0FBRyxDQUFDLEdBQUcsSUFBSSxHQUFHLElBQUksQ0FBQztBQUN2QyxJQUFJLFVBQVUsR0FBRyxFQUFFLENBQUM7QUFFcEI7SUFDRTtRQUtFLEVBQUUsQ0FBQyxVQUFVLENBQUM7WUFDWixHQUFHLEVBQUUsZUFBZTtZQUNwQixPQUFPLFlBQUMsR0FBRztnQkFDVCxJQUFJLEdBQUcsQ0FBQyxJQUFJLEVBQUU7b0JBQ1osVUFBVSxHQUFHLEdBQUcsQ0FBQyxJQUFJLENBQUM7aUJBQ3ZCO1lBQ0gsQ0FBQztTQUNGLENBQUMsQ0FBQztJQUNMLENBQUM7SUFNRCw0QkFBUSxHQUFSLFVBQVMsR0FBRztRQUNWLE9BQU8sSUFBSSxPQUFPLENBQUMsVUFBQyxPQUFPLEVBQUUsTUFBTTtZQUNqQyxJQUFJLENBQUMsQ0FBQyxHQUFHLElBQUksSUFBSSxDQUFDLFVBQVUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxFQUFFO2dCQUNsQyxPQUFPLENBQUMsR0FBRyxDQUFDLENBQUM7Z0JBQ2IsT0FBTzthQUNSO1lBQ0QsSUFBTSxJQUFJLEdBQUcsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDO1lBRTFCLElBQUksSUFBSSxFQUFFO2dCQUVSLEVBQUUsQ0FBQyxnQkFBZ0IsQ0FBQztvQkFDbEIsUUFBUSxFQUFFLElBQUksQ0FBQyxRQUFRLENBQUM7b0JBQ3hC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LGlCQUFZLElBQUksQ0FBQyxTQUFTLENBQUMsS0FBSyxDQUFHLENBQUMsQ0FBQztZQUMvRSxDQUFDO1NBQ0YsQ0FBQyxDQUFDOztJQVZMLEtBQXNCLFVBQWlCLEVBQWpCLHVDQUFpQixFQUFqQiwrQkFBaUIsRUFBakIsSUFBaUI7UUFBbEMsSUFBTSxPQUFPLDBCQUFBO2dCQUFQLE9BQU87S0FXakI7QUFDSCxDQUFDO0FBRUQsU0FBUyxPQUFPLENBQUMsR0FBRztJQUNsQixJQUFJLENBQUMsVUFBVSxDQUFDLEdBQUcsQ0FBQyxFQUFFO1FBQ3BCLE9BQU87S0FDUjtJQUNELFVBQVUsQ0FBQyxHQUFHLENBQUMsQ0FBQyxJQUFJLEdBQUcsSUFBSSxJQUFJLEVBQUUsQ0FBQyxPQUFPLEVBQUUsQ0FBQztJQUM1QyxFQUFFLENBQUMsVUFBVSxDQUFDO1FBQ1osR0FBRyxFQUFFLGVBQWU7UUFDcEIsSUFBSSxFQUFFLFVBQVU7S0FDakIsQ0FBQyxDQUFDO0lBQ0gsT0FBTyxVQUFVLENBQUMsR0FBRyxDQUFDLENBQUM7QUFDekIsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbIi8qIGVzbGludC1kaXNhYmxlICovXG4vKipcbiAqIExSVSDmlofku7blrZjlgqjvvIzkvb/nlKjor6UgZG93bmxvYWRlciDlj6/ku6XorqnkuIvovb3nmoTmlofku7blrZjlgqjlnKjmnKzlnLDvvIzkuIvmrKHov5vlhaXlsI/nqIvluo/lkI7lj6/ku6Xnm7TmjqXkvb/nlKhcbiAqIOivpue7huiuvuiuoeaWh+aho+WPr+afpeeciyBodHRwczovL2p1ZWppbi5pbS9wb3N0LzViNDJkM2VkZTUxZDQ1MTkyNzdiNmNlM1xuICovXG5jb25zdCB1dGlsID0gcmVxdWlyZSgnLi91dGlsJyk7XG5cbmNvbnN0IFNBVkVEX0ZJTEVTX0tFWSA9ICdzYXZlZEZpbGVzJztcbmNvbnN0IEtFWV9UT1RBTF9TSVpFID0gJ3RvdGFsU2l6ZSc7XG5jb25zdCBLRVlfUEFUSCA9ICdwYXRoJztcbmNvbnN0IEtFWV9USU1FID0gJ3RpbWUnO1xuY29uc3QgS0VZX1NJWkUgPSAnc2l6ZSc7XG5cbi8vIOWPr+WtmOWCqOaAu+WFseS4uiA2Te+8jOebruWJjeWwj+eoi+W6j+WPr+WFgeiuuOeahOacgOWkp+acrOWcsOWtmOWCqOS4uiAxME1cbmNvbnN0IE1BWF9TUEFDRV9JTl9CID0gNiAqIDEwMjQgKiAxMDI0O1xubGV0IHNhdmVkRmlsZXMgPSB7fTtcblxuZXhwb3J0IGRlZmF1bHQgY2xhc3MgRG93bG9hZGVyIHtcbiAgY29uc3RydWN0b3IoKSB7XG4gICAgLy8gYXBwIOWmguaenOiuvue9ruS6huacgOWkp+WtmOWCqOepuumXtO+8jOWImeS9v+eUqCBhcHAg5Lit55qEXG4gICAgLy8gaWYgKGdldEFwcCgpLlBBSU5URVJfTUFYX0xSVV9TUEFDRSkge1xuICAgIC8vICAgTUFYX1NQQUNFX0lOX0IgPSBnZXRBcHAoKS5QQUlOVEVSX01BWF9MUlVfU1BBQ0U7XG4gICAgLy8gfVxuICAgIHd4LmdldFN0b3JhZ2Uoe1xuICAgICAga2V5OiBTQVZFRF9GSUxFU19LRVksXG4gICAgICBzdWNjZXNzKHJlcykge1xuICAgICAgICBpZiAocmVzLmRhdGEpIHtcbiAgICAgICAgICBzYXZlZEZpbGVzID0gcmVzLmRhdGE7XG4gICAgICAgIH1cbiAgICAgIH0sXG4gICAgfSk7XG4gIH1cblxuICAvKipcbiAgICog5LiL6L295paH5Lu277yM5Lya55SoIGxydSDmlrnlvI/mnaXnvJPlrZjmlofku7bliLDmnKzlnLBcbiAgICogQHBhcmFtIHtTdHJpbmd9IHVybCDmlofku7bnmoQgdXJsXG4gICAqL1xuICBkb3dubG9hZCh1cmwpIHtcbiAgICByZXR1cm4gbmV3IFByb21pc2UoKHJlc29sdmUsIHJlamVjdCkgPT4ge1xuICAgICAgaWYgKCEodXJsICYmIHV0aWwuaXNWYWxpZFVybCh1cmwpKSkge1xuICAgICAgICByZXNvbHZlKHVybCk7XG4gICAgICAgIHJldHVybjtcbiAgICAgIH1cbiAgICAgIGNvbnN0IGZpbGUgPSBnZXRGaWxlKHVybCk7XG5cbiAgICAgIGlmIChmaWxlKSB7XG4gICAgICAgIC8vIOajgOafpeaWh+S7tuaYr+WQpuato+W4uO+8jOS4jeato+W4uOmcgOimgemHjeaWsOS4i+i9vVxuICAgICAgICB3eC5nZXRTYXZlZEZpbGVJbmZvKHtcbiAgICAgICAgICBmaWxlUGF0aDogZmlsZVtLRVlfUEFUSF0sXG4gICAgICAgICAgc3VjY2VzczogKHJlcykgPT4ge1xuICAgICAgICAgICAgcmVzb2x2ZShmaWxlW0tFWV9QQVRIXSk7XG4gICAgICAgICAgfSxcbiAgICAgICAgICBmYWlsOiAoZXJyb3IpID0+IHtcbiAgICAgICAgICAgIGNvbnNvbGUuZXJyb3IoYHRoZSBmaWxlIGlzIGJyb2tlbiwgcmVkb3dubG9hZCBpdCwgJHtKU09OLnN0cmluZ2lmeShlcnJvcil9YCk7XG4gICAgICAgICAgICBkb3dubG9hZEZpbGUodXJsKS50aGVuKChwYXRoKSA9PiB7XG4gICAgICAgICAgICAgIHJlc29sdmUocGF0aCk7XG4gICAgICAgICAgICB9LCAoKSA9PiB7XG4gICAgICAgICAgICAgIHJlamVjdCgpO1xuICAgICAgICAgICAgfSk7XG4gICAgICAgICAgfSxcbiAgICAgICAgfSk7XG4gICAgICB9IGVsc2Uge1xuICAgICAgICBkb3dubG9hZEZpbGUodXJsKS50aGVuKChwYXRoKSA9PiB7XG4gICAgICAgICAgcmVzb2x2ZShwYXRoKTtcbiAgICAgICAgfSwgKCkgPT4ge1xuICAgICAgICAgIHJlamVjdCgpO1xuICAgICAgICB9KTtcbiAgICAgIH1cbiAgICB9KTtcbiAgfVxufVxuXG5mdW5jdGlvbiBkb3dubG9hZEZpbGUodXJsKSB7XG4gIHJldHVybiBuZXcgUHJvbWlzZSgocmVzb2x2ZSwgcmVqZWN0KSA9PiB7XG4gICAgd3guZG93bmxvYWRGaWxlKHtcbiAgICAgIHVybCxcbiAgICAgIHN1Y2Nlc3MocmVzKSB7XG4gICAgICAgIGlmIChyZXMuc3RhdHVzQ29kZSAhPT0gMjAwKSB7XG4gICAgICAgICAgY29uc29sZS5lcnJvcihgZG93bmxvYWRGaWxlICR7dXJsfSBmYWlsZWQgcmVzLnN0YXR1c0NvZGUgaXMgbm90IDIwMGApO1xuICAgICAgICAgIHJlamVjdCgpO1xuICAgICAgICAgIHJldHVybjtcbiAgICAgICAgfVxuICAgICAgICBjb25zdCB7IHRlbXBGaWxlUGF0aCB9ID0gcmVzO1xuICAgICAgICB0cnkge1xuICAgICAgICAgIHd4LmdldEZpbGVJbmZvKHtcbiAgICAgICAgICAgIGZpbGVQYXRoOiB0ZW1wRmlsZVBhdGgsXG4gICAgICAgICAgICBzdWNjZXNzOiAodG1wUmVzKSA9PiB7XG4gICAgICAgICAgICAgIGNvbnN0IG5ld0ZpbGVTaXplID0gdG1wUmVzLnNpemU7XG4gICAgICAgICAgICAgIGRvTHJ1KG5ld0ZpbGVTaXplKS50aGVuKCgpID0+IHtcbiAgICAgICAgICAgICAgICBzYXZlRmlsZSh1cmwsIG5ld0ZpbGVTaXplLCB0ZW1wRmlsZVBhdGgpLnRoZW4oKGZpbGVQYXRoKSA9PiB7XG4gICAgICAgICAgICAgICAgICByZXNvbHZlKGZpbGVQYXRoKTtcbiAgICAgICAgICAgICAgICB9KTtcbiAgICAgICAgICAgICAgfSwgKCkgPT4ge1xuICAgICAgICAgICAgICAgIHJlc29sdmUodGVtcEZpbGVQYXRoKTtcbiAgICAgICAgICAgICAgfSk7XG4gICAgICAgICAgICB9LFxuICAgICAgICAgICAgZmFpbDogKGVycm9yKSA9PiB7XG4gICAgICAgICAgICAvLyDmlofku7blpKflsI/kv6Hmga/ojrflj5blpLHotKXvvIzliJnmraTmlofku7bkuZ/kuI3opoHov5vooYzlrZjlgqhcbiAgICAgICAgICAgICAgY29uc29sZS5lcnJvcihgZ2V0RmlsZUluZm8gJHtyZXMudGVtcEZpbGVQYXRofSBmYWlsZWQsICR7SlNPTi5zdHJpbmdpZnkoZXJyb3IpfWApO1xuICAgICAgICAgICAgICByZXNvbHZlKHJlcy50ZW1wRmlsZVBhdGgpO1xuICAgICAgICAgICAgfSxcbiAgICAgICAgICB9KTtcbiAgICAgICAgfSBjYXRjaCAoZSkge1xuICAgICAgICAgIC8vIOWFvOWuueaPkuS7tlxuICAgICAgICAgIHJlc29sdmUodGVtcEZpbGVQYXRoKTtcbiAgICAgICAgfVxuICAgICAgfSxcbiAgICAgIGZhaWwoZXJyb3IpIHtcbiAgICAgICAgY29uc29sZS5lcnJvcihgZG93bmxvYWRGaWxlIGZhaWxlZCwgJHtKU09OLnN0cmluZ2lmeShlcnJvcil9IGApO1xuICAgICAgICByZWplY3QoKTtcbiAgICAgIH0sXG4gICAgfSk7XG4gIH0pO1xufVxuXG5mdW5jdGlvbiBzYXZlRmlsZShrZXksIG5ld0ZpbGVTaXplLCB0ZW1wRmlsZVBhdGgpIHtcbiAgcmV0dXJuIG5ldyBQcm9taXNlKChyZXNvbHZlLCByZWplY3QpID0+IHtcbiAgICB3eC5zYXZlRmlsZSh7XG4gICAgICB0ZW1wRmlsZVBhdGgsXG4gICAgICBzdWNjZXNzOiAoZmlsZVJlcykgPT4ge1xuICAgICAgICBjb25zdCB0b3RhbFNpemUgPSBzYXZlZEZpbGVzW0tFWV9UT1RBTF9TSVpFXSA/IHNhdmVkRmlsZXNbS0VZX1RPVEFMX1NJWkVdIDogMDtcbiAgICAgICAgc2F2ZWRGaWxlc1trZXldID0ge307XG4gICAgICAgIHNhdmVkRmlsZXNba2V5XVtLRVlfUEFUSF0gPSBmaWxlUmVzLnNhdmVkRmlsZVBhdGg7XG4gICAgICAgIHNhdmVkRmlsZXNba2V5XVtLRVlfVElNRV0gPSBuZXcgRGF0ZSgpLmdldFRpbWUoKTtcbiAgICAgICAgc2F2ZWRGaWxlc1trZXldW0tFWV9TSVpFXSA9IG5ld0ZpbGVTaXplO1xuICAgICAgICBzYXZlZEZpbGVzLnRvdGFsU2l6ZSA9IG5ld0ZpbGVTaXplICsgdG90YWxTaXplO1xuICAgICAgICB3eC5zZXRTdG9yYWdlKHtcbiAgICAgICAgICBrZXk6IFNBVkVEX0ZJTEVTX0tFWSxcbiAgICAgICAgICBkYXRhOiBzYXZlZEZpbGVzLFxuICAgICAgICB9KTtcbiAgICAgICAgcmVzb2x2ZShmaWxlUmVzLnNhdmVkRmlsZVBhdGgpO1xuICAgICAgfSxcbiAgICAgIGZhaWw6IChlcnJvcikgPT4ge1xuICAgICAgICBjb25zb2xlLmVycm9yKGBzYXZlRmlsZSAke2tleX0gZmFpbGVkLCB0aGVuIHdlIGRlbGV0ZSBhbGwgZmlsZXMsICR7SlNPTi5zdHJpbmdpZnkoZXJyb3IpfWApO1xuICAgICAgICAvLyDnlLHkuo4gc2F2ZUZpbGUg5oiQ5Yqf5ZCO77yMcmVzLnRlbXBGaWxlUGF0aCDlpITnmoTmlofku7bkvJrooqvnp7vpmaTvvIzmiYDku6XlnKjlrZjlgqjmnKrmiJDlip/ml7bvvIzmiJHku6zov5jmmK/nu6fnu63kvb/nlKjkuLTml7bmlofku7ZcbiAgICAgICAgcmVzb2x2ZSh0ZW1wRmlsZVBhdGgpO1xuICAgICAgICAvLyDlpoLmnpzlh7rnjrDplJnor6/vvIzlsLHnm7TmjqXmg4XlhrXmnKzlnLDnmoTmiYDmnInmlofku7bvvIzlm6DkuLrkvaDkuI3nn6XpgZPmmK/kuI3mmK/lm6DkuLrlk6rmrKFscnXnmoTmn5DkuKrmlofku7bmnKrliKDpmaTmiJDlip9cbiAgICAgICAgcmVzZXQoKTtcbiAgICAgIH0sXG4gICAgfSk7XG4gIH0pO1xufVxuXG4vKipcbiAqIOa4heepuuaJgOacieS4i+i9veebuOWFs+WGheWuuVxuICovXG5mdW5jdGlvbiByZXNldCgpIHtcbiAgd3gucmVtb3ZlU3RvcmFnZSh7XG4gICAga2V5OiBTQVZFRF9GSUxFU19LRVksXG4gICAgc3VjY2VzczogKCkgPT4ge1xuICAgICAgd3guZ2V0U2F2ZWRGaWxlTGlzdCh7XG4gICAgICAgIHN1Y2Nlc3M6IChsaXN0UmVzKSA9PiB7XG4gICAgICAgICAgcmVtb3ZlRmlsZXMobGlzdFJlcy5maWxlTGlzdCk7XG4gICAgICAgIH0sXG4gICAgICAgIGZhaWw6IChnZXRFcnJvcikgPT4ge1xuICAgICAgICAgIGNvbnNvbGUuZXJyb3IoYGdldFNhdmVkRmlsZUxpc3QgZmFpbGVkLCAke0pTT04uc3RyaW5naWZ5KGdldEVycm9yKX1gKTtcbiAgICAgICAgfSxcbiAgICAgIH0pO1xuICAgIH0sXG4gIH0pO1xufVxuXG5mdW5jdGlvbiBkb0xydShzaXplKSB7XG4gIHJldHVybiBuZXcgUHJvbWlzZSgocmVzb2x2ZSwgcmVqZWN0KSA9PiB7XG4gICAgbGV0IHRvdGFsU2l6ZSA9IHNhdmVkRmlsZXNbS0VZX1RPVEFMX1NJWkVdID8gc2F2ZWRGaWxlc1tLRVlfVE9UQUxfU0laRV0gOiAwO1xuXG4gICAgaWYgKHNpemUgKyB0b3RhbFNpemUgPD0gTUFYX1NQQUNFX0lOX0IpIHtcbiAgICAgIHJlc29sdmUoKTtcbiAgICAgIHJldHVybjtcbiAgICB9XG4gICAgLy8g5aaC5p6c5Yqg5LiK5paw5paH5Lu25ZCO5aSn5bCP6LaF6L+H5pyA5aSn6ZmQ5Yi277yM5YiZ6L+b6KGMIGxydVxuICAgIGNvbnN0IHBhdGhzU2hvdWxkRGVsZXRlID0gW107XG4gICAgLy8g5oyJ54Wn5pyA5ZCO5LiA5qyh55qE6K6/6Zeu5pe26Ze077yM5LuO5bCP5Yiw5aSn5o6S5bqPXG4gICAgY29uc3QgYWxsRmlsZXMgPSBKU09OLnBhcnNlKEpTT04uc3RyaW5naWZ5KHNhdmVkRmlsZXMpKTtcbiAgICBkZWxldGUgYWxsRmlsZXNbS0VZX1RPVEFMX1NJWkVdO1xuICAgIGNvbnN0IHNvcnRlZEtleXMgPSBPYmplY3Qua2V5cyhhbGxGaWxlcykuc29ydCgoYSwgYikgPT4ge1xuICAgICAgcmV0dXJuIGFsbEZpbGVzW2FdW0tFWV9USU1FXSAtIGFsbEZpbGVzW2JdW0tFWV9USU1FXTtcbiAgICB9KTtcblxuICAgIGZvciAoY29uc3Qgc29ydGVkS2V5IG9mIHNvcnRlZEtleXMpIHtcbiAgICAgIHRvdGFsU2l6ZSAtPSBzYXZlZEZpbGVzW3NvcnRlZEtleV0uc2l6ZTtcbiAgICAgIHBhdGhzU2hvdWxkRGVsZXRlLnB1c2goc2F2ZWRGaWxlc1tzb3J0ZWRLZXldW0tFWV9QQVRIXSk7XG4gICAgICBkZWxldGUgc2F2ZWRGaWxlc1tzb3J0ZWRLZXldO1xuICAgICAgaWYgKHRvdGFsU2l6ZSArIHNpemUgPCBNQVhfU1BBQ0VfSU5fQikge1xuICAgICAgICBicmVhaztcbiAgICAgIH1cbiAgICB9XG5cbiAgICBzYXZlZEZpbGVzLnRvdGFsU2l6ZSA9IHRvdGFsU2l6ZTtcbiAgICAvLyBkZWJ1Z2dlcjtcbiAgICB3eC5zZXRTdG9yYWdlKHtcbiAgICAgIGtleTogU0FWRURfRklMRVNfS0VZLFxuICAgICAgZGF0YTogc2F2ZWRGaWxlcyxcbiAgICAgIHN1Y2Nlc3M6ICgpID0+IHtcbiAgICAgIC8vIOS/neivgSBzdG9yYWdlIOS4reS4jeS8muWtmOWcqOS4jeWtmOWcqOeahOaWh+S7tuaVsOaNrlxuICAgICAgICBpZiAocGF0aHNTaG91bGREZWxldGUubGVuZ3RoID4gMCkge1xuICAgICAgICAgIHJlbW92ZUZpbGVzKHBhdGhzU2hvdWxkRGVsZXRlKTtcbiAgICAgICAgfVxuICAgICAgICByZXNvbHZlKCk7XG4gICAgICB9LFxuICAgICAgZmFpbDogKGVycm9yKSA9PiB7XG4gICAgICAgIGNvbnNvbGUuZXJyb3IoYGRvTHJ1IHNldFN0b3JhZ2UgZmFpbGVkLCAke0pTT04uc3RyaW5naWZ5KGVycm9yKX1gKTtcbiAgICAgICAgcmVqZWN0KCk7XG4gICAgICB9LFxuICAgIH0pO1xuICB9KTtcbn1cblxuZnVuY3Rpb24gcmVtb3ZlRmlsZXMocGF0aHNTaG91bGREZWxldGUpIHtcbiAgZm9yIChjb25zdCBwYXRoRGVsIG9mIHBhdGhzU2hvdWxkRGVsZXRlKSB7XG4gICAgbGV0IGRlbFBhdGggPSBwYXRoRGVsO1xuICAgIGlmICh0eXBlb2YgcGF0aERlbCA9PT0gJ29iamVjdCcpIHtcbiAgICAgIGRlbFBhdGggPSBwYXRoRGVsLmZpbGVQYXRoO1xuICAgIH1cbiAgICB3eC5yZW1vdmVTYXZlZEZpbGUoe1xuICAgICAgZmlsZVBhdGg6IGRlbFBhdGgsXG4gICAgICBmYWlsOiAoZXJyb3IpID0+IHtcbiAgICAgICAgY29uc29sZS5lcnJvcihgcmVtb3ZlU2F2ZWRGaWxlICR7cGF0aERlbH0gZmFpbGVkLCAke0pTT04uc3RyaW5naWZ5KGVycm9yKX1gKTtcbiAgICAgIH0sXG4gICAgfSk7XG4gIH1cbn1cblxuZnVuY3Rpb24gZ2V0RmlsZShrZXkpIHtcbiAgaWYgKCFzYXZlZEZpbGVzW2tleV0pIHtcbiAgICByZXR1cm47XG4gIH1cbiAgc2F2ZWRGaWxlc1trZXldLnRpbWUgPSBuZXcgRGF0ZSgpLmdldFRpbWUoKTtcbiAgd3guc2V0U3RvcmFnZSh7XG4gICAga2V5OiBTQVZFRF9GSUxFU19LRVksXG4gICAgZGF0YTogc2F2ZWRGaWxlcyxcbiAgfSk7XG4gIHJldHVybiBzYXZlZEZpbGVzW2tleV07XG59XG4iXX0=

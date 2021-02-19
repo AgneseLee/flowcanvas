@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "module": "CommonJS",
+    "target": "es5",
+    "lib": [
+      "es6"
+    ],
+    "allowJs": false,
+    "experimentalDecorators": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "alwaysStrict": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "strict": true,
+    "removeComments": true,
+    "pretty": true,
+    "strictPropertyInitialization": true,
+    "resolveJsonModule": true,
+    "typeRoots": [
+      "typings", 
+      "node_modules/miniprogram-api-typings"
+    ],
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.d.ts", 
+  ],
+  "exclude": [
+    "**/*.spec.ts"
+  ]
+}

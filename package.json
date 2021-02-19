@@ -2,6 +2,7 @@
   "name": "painter-program",
   "version": "1.0.0",
   "description": "",
+  "types": "typings/index.d.ts",
   "main": "app.js",
   "dependencies": {},
   "devDependencies": {
@@ -10,9 +11,15 @@
     "@babel/preset-env": "^7.12.13",
     "@babel/preset-react": "^7.12.13",
     "@babel/runtime": "^7.12.13",
+    "@types/node": "^14.14.30",
+    "@typescript-eslint/eslint-plugin": "^4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
     "del": "^5.1.0",
+    "eslint": "^7.20.0",
     "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-airbnb-typescript": "^12.3.1",
     "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-clean-css": "^4.3.0",
@@ -22,14 +29,17 @@
     "gulp-react": "^4.0.0",
     "gulp-rename": "^1.4.0",
     "gulp-uglify": "^3.0.2",
-    "miniprogram-ci": "^1.0.98"
+    "miniprogram-api-typings": "^3.2.2",
+    "miniprogram-ci": "^1.0.98",
+    "typescript": "^4.1.5"
   },
   "scripts": {
     "dev": "gulp watch --watch",
     "build": "gulp build",
     "fix": "gulp fix",
     "useNpm": "node ./useNpm.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tscheck": "tsc -p tsconfig.json",
+    "tscheck-watch": "tsc -p tsconfig.json --watch"
   },
   "repository": {
     "type": "git",
