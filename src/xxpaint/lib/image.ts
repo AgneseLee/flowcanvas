@@ -61,4 +61,8 @@ function downloadImages(palette) {
   });
 }
 
-module.exports.downloadImages = downloadImages;
+// module.exports.downloadImages = downloadImages;
+// export.downloadImages= downloadImages
+export {
+  downloadImages
+}

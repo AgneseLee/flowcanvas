@@ -4,4 +4,3 @@ declare namespace IVnode {
     type: string;
   }
 }
-// export default IVnode;

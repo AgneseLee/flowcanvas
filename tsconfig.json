@@ -2,7 +2,7 @@
   "compilerOptions": {
     "strictNullChecks": true,
     "noImplicitAny": true,
-    "module": "CommonJS",
+    "module": "es6",
     "target": "es5",
     "lib": [
       "es6"
@@ -12,6 +12,7 @@
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "alwaysStrict": true,
+    "esModuleInterop": true,
     "inlineSourceMap": true,
     "inlineSources": true,
     "noFallthroughCasesInSwitch": true,
@@ -21,11 +22,14 @@
     "removeComments": true,
     "pretty": true,
     "strictPropertyInitialization": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports":true,
     "resolveJsonModule": true,
     "typeRoots": [
       "typings", 
       "node_modules/miniprogram-api-typings"
     ],
+    "outDir": "./build"
   },
   "include": [
     "./src/**/*.ts",

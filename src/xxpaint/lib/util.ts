@@ -1,4 +1,4 @@
-function isValidUrl(url) {
+export function isValidUrl(url) {
   return /(ht|f)tp(s?):\/\/([^ \\/]*\.)+[^ \\/]*(:[0-9]+)?\/?/.test(url);
 }
 
@@ -10,7 +10,7 @@ function isValidUrl(url) {
  * @return {Boolean}   是否相同
  */
 /* eslint-disable */
-function equal(a, b) {
+export function equal(a, b) {
   if (a === b) return true;
 
   if (a && b && typeof a == 'object' && typeof b == 'object') {
@@ -87,14 +87,14 @@ function compareVersion(v1, v2) {
 }
 
 // >=2.9.0 的基础库可以用新版canvas
-function canUseNewCanvas() {
+export function canUseNewCanvas() {
   const version = wx.getSystemInfoSync().SDKVersion
   // console.warn("version", version)
   return compareVersion(version, '2.9.0') >= 0;
 }
 
 // 字符串rpx/px转换成数字，单位为px
-function setStringPrototype(screenK, scale) {
+export function setStringPrototype(screenK, scale) {
   /* eslint-disable no-extend-native */
   /**
    * 是否支持负数
@@ -126,7 +126,7 @@ function setStringPrototype(screenK, scale) {
 }
 
 // 逆序广度优先
-function breadthFirstSearchRight(node) {
+export function breadthFirstSearchRight(node) {
   var nodes = [];
   if (node != null) {
     var queue = [];
@@ -142,7 +142,7 @@ function breadthFirstSearchRight(node) {
   return nodes.reverse();
 }
 // 顺序广度优先
-function breadthFirstSearch(node) {
+export function breadthFirstSearch(node) {
   var nodes = [];
   if (node != null) {
     var queue = [];
@@ -163,7 +163,7 @@ function breadthFirstSearch(node) {
  * @param {object} css 
  * @param {object} parent 父节点
  */
-function formatPaddingMargin(css, parent) {
+export function formatPaddingMargin(css, parent) {
   const copy = JSON.parse(JSON.stringify(css))
   const arr = ["paddingLeft", "marginLeft", "paddingTop", "marginTop", "paddingRight", "paddingBottom", "marginRight", "marginBottom"]
   for (const name of arr) {
@@ -196,7 +196,7 @@ function formatPaddingMargin(css, parent) {
  * @param {object} parent 父节点对象
  * @param {string} sizeName width/height
  */
-function formatToNum(_w, parent, sizeName) {
+export function formatToNum(_w, parent, sizeName) {
   let width = 0
   if (!_w) {
     return width
@@ -219,7 +219,7 @@ function formatToNum(_w, parent, sizeName) {
   return width
 }
 
-function deepFirstSearch(node, fn) {
+export function deepFirstSearch(node, fn) {
   var nodes = [];
   if (node != null) {
       var stack = [];
@@ -236,16 +236,4 @@ function deepFirstSearch(node, fn) {
   return nodes;
 }
 
-
-module.exports = {
-  isValidUrl,
-  equal,
-  canUseNewCanvas,
-  setStringPrototype,
-  breadthFirstSearchRight,
-  breadthFirstSearch,
-  formatPaddingMargin,
-  formatToNum,
-  deepFirstSearch
-};
 

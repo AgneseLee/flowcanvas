@@ -1,6 +1,5 @@
 /* eslint-disable */
-// import _util from './util';
-const setStringPrototype = require('./util').setStringPrototype;
+import {setStringPrototype}  from './util'
 
 export default class Modifier {
   constructor(tpl) {
