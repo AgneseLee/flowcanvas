@@ -7,7 +7,7 @@ import { deepFirstSearch } from './util';
  * 创建虚拟节点
  * @param {object} node 配置文件中的节点
  */
-export const createVnode = (node) => {
+ const _createVnode = (node) => {
   const _node = {
     // id:
     text: node.text || '', // 文本类型才有
@@ -58,14 +58,14 @@ export const connectChildren = (el, isRoot = false) => {
  * 创建虚拟节点树
  * @param {object} jsonObj json文件中的配置
  */
-export const initVnodeTree = (node) => {
+ const initVnodeTree = (node) => {
   const nodes = [];
   if (node != null) {
     const queue = [];
     queue.unshift(node);
     while (queue.length != 0) {
       let item = queue.shift();
-      item = createVnode(item);
+      item = _createVnode(item);
       nodes.push(item);
       const children = item.children || [];
       for (let i = 0; i < children.length; i++) queue.push(children[i]);
@@ -145,7 +145,7 @@ function _formatVnode2(xom, style) {
     }
     node.type = node.name;
 
-    createVnode(node);
+    _createVnode(node);
   });
   // 关联父子兄弟节点和样式继承
   connectChildren(xom);
@@ -173,7 +173,7 @@ function _formatVnode(xom, style) {
     }
     node.type = node.name;
 
-    createVnode(node);
+    _createVnode(node);
   });
   // 关联父子兄弟节点和样式继承
   connectChildren(xom);
