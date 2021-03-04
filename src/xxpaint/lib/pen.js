@@ -68,6 +68,7 @@ export default class Painter {
     // debugger
     // initVnodeTree(this.data)
     const rr = xmlToVnode(wxml, style);
+    // const rr = wxml
     console.log('** ', rr);
     this.data.children[0] = rr;
     const tplTo1 = this.data;
@@ -355,20 +356,20 @@ export default class Painter {
     // 获取原始css宽高/文字换行高度
     let json;
     switch (view.type) {
-    case 'image':
-      json = this._preProcess(view);
-      break;
-    case 'text':
-      json = this._preProcess(view, view.css.background && view.css.borderRadius);
-      break;
-    case 'rect':
-      json = this._preProcess(view);
-      break;
-    case 'block':
-      json = this._preProcess(view);
-      break;
-    default:
-      break;
+      case 'image':
+        json = this._preProcess(view);
+        break;
+      case 'text':
+        json = this._preProcess(view, view.css.background && view.css.borderRadius);
+        break;
+      case 'rect':
+        json = this._preProcess(view);
+        break;
+      case 'block':
+        json = this._preProcess(view);
+        break;
+      default:
+        break;
     }
     // view._id = i;
     view.processedLocation = json;
@@ -420,20 +421,20 @@ export default class Painter {
     //   view.css = Object.assign(...view.css);
     // }
     switch (view.type) {
-    case 'image':
-      await this._drawAbsImage(view);
-      break;
-    case 'text':
-      this._fillAbsText(view);
-      break;
-    case 'rect':
-      this._drawAbsRect(view);
-      break;
-    case 'block':
-      this._drawAbsRect(view);
-      break;
-    default:
-      break;
+      case 'image':
+        await this._drawAbsImage(view);
+        break;
+      case 'text':
+        this._fillAbsText(view);
+        break;
+      case 'rect':
+        this._drawAbsRect(view);
+        break;
+      case 'block':
+        this._drawAbsRect(view);
+        break;
+      default:
+        break;
     }
   }
 
@@ -537,94 +538,94 @@ export default class Painter {
     let height;
     let extra;
     switch (view.type) {
-    case 'text': {
-      const textArray = view.text.split('\n');
-      // 处理多个连续的'\n'
-      for (let i = 0; i < textArray.length; ++i) {
-        if (textArray[i] === '') {
-          textArray[i] = ' ';
-        }
-      }
-      const fontWeight = view.css.fontWeight === 'bold' ? 'bold' : 'normal';
-      view.css.fontSize = view.css.fontSize ? view.css.fontSize : '20rpx';
-      // 需要计算文字宽度，这里初始化不能省略
-      this.ctx.font = `normal ${fontWeight} ${view.css.fontSize.toPx()}px ${view.css.fontFamily ? `"${view.css.fontFamily}"` : 'sans-serif'}`;
-
-      // this.ctx.setFontSize(view.css.fontSize.toPx());
-      // 计算行数
-      let lines = 0;
-      const linesArray = [];
-      for (let i = 0; i < textArray.length; ++i) {
-        const textLength = this.ctx.measureText(textArray[i]).width;
-        const partWidth = view.css.width ? formatToNum(view.css.width, view.parent, 'width') : textLength;
-        // debugger
-        const calLines = Math.ceil(textLength / partWidth);
-        width = partWidth > width ? partWidth : width;
-        lines += calLines;
-        linesArray[i] = calLines;
-      }
-      lines = view.css.maxLines < lines ? view.css.maxLines : lines;
-      const lineHeight = view.css.lineHeight ? view.css.lineHeight.toPx() : view.css.fontSize.toPx();
-      height = lineHeight * lines;
-
-      extra = {
-        lines,
-        lineHeight,
-        textArray,
-        linesArray,
-      };
-      // 文字取实际宽度
-      if (view.id) {
-        let textWidth = 0;
+      case 'text': {
+        const textArray = view.text.split('\n');
+        // 处理多个连续的'\n'
         for (let i = 0; i < textArray.length; ++i) {
-          textWidth = this.ctx.measureText(textArray[i]).width > textWidth ? this.ctx.measureText(textArray[i]).width : textWidth;
+          if (textArray[i] === '') {
+            textArray[i] = ' ';
+          }
         }
-        width = width ? (textWidth < width ? textWidth : width) : textWidth;
-        // this.globalWidth[view.id] = width ? (textWidth < width ? textWidth : width) : textWidth;
-      }
-      // debugger;
-      break;
-    }
-    case 'image': {
-      // image的长宽设置成auto的逻辑处理
-      const { pixelRatio } = wx.getSystemInfoSync();
-      const ratio = pixelRatio || 2;
-      // const ratio = 2
-      // 有css却未设置width或height，则默认为auto
-      if (view.css) {
-        if (!view.css.width) {
-          view.css.width = 'auto';
+        const fontWeight = view.css.fontWeight === 'bold' ? 'bold' : 'normal';
+        view.css.fontSize = view.css.fontSize ? view.css.fontSize : '20rpx';
+        // 需要计算文字宽度，这里初始化不能省略
+        this.ctx.font = `normal ${fontWeight} ${view.css.fontSize.toPx()}px ${view.css.fontFamily ? `"${view.css.fontFamily}"` : 'sans-serif'}`;
+
+        // this.ctx.setFontSize(view.css.fontSize.toPx());
+        // 计算行数
+        let lines = 0;
+        const linesArray = [];
+        for (let i = 0; i < textArray.length; ++i) {
+          const textLength = this.ctx.measureText(textArray[i]).width;
+          const partWidth = view.css.width ? formatToNum(view.css.width, view.parent, 'width') : textLength;
+          // debugger
+          const calLines = Math.ceil(textLength / partWidth);
+          width = partWidth > width ? partWidth : width;
+          lines += calLines;
+          linesArray[i] = calLines;
         }
-        if (!view.css.height) {
-          view.css.height = 'auto';
+        lines = view.css.maxLines < lines ? view.css.maxLines : lines;
+        const lineHeight = view.css.lineHeight ? view.css.lineHeight.toPx() : view.css.fontSize.toPx();
+        height = lineHeight * lines;
+
+        extra = {
+          lines,
+          lineHeight,
+          textArray,
+          linesArray,
+        };
+        // 文字取实际宽度
+        if (view.id) {
+          let textWidth = 0;
+          for (let i = 0; i < textArray.length; ++i) {
+            textWidth = this.ctx.measureText(textArray[i]).width > textWidth ? this.ctx.measureText(textArray[i]).width : textWidth;
+          }
+          width = width ? (textWidth < width ? textWidth : width) : textWidth;
+          // this.globalWidth[view.id] = width ? (textWidth < width ? textWidth : width) : textWidth;
         }
+        // debugger;
+        break;
       }
+      case 'image': {
+        // image的长宽设置成auto的逻辑处理
+        const { pixelRatio } = wx.getSystemInfoSync();
+        const ratio = pixelRatio || 2;
+        // const ratio = 2
+        // 有css却未设置width或height，则默认为auto
+        if (view.css) {
+          if (!view.css.width) {
+            view.css.width = 'auto';
+          }
+          if (!view.css.height) {
+            view.css.height = 'auto';
+          }
+        }
 
-      if (!view.css || (view.css.width === 'auto' && view.css.height === 'auto')) {
-        width = Math.round(view.sWidth / ratio);
-        height = Math.round(view.sHeight / ratio);
-      } else if (view.css.width === 'auto') {
-        height = view.css.height.toPx();
-        width = view.sWidth / view.sHeight * height;
-      } else if (view.css.height === 'auto') {
-        width = view.css.width.toPx();
-        height = view.sHeight / view.sWidth * width;
-      } else {
-        width = view.css.width.toPx();
-        height = view.css.height.toPx();
+        if (!view.css || (view.css.width === 'auto' && view.css.height === 'auto')) {
+          width = Math.round(view.sWidth / ratio);
+          height = Math.round(view.sHeight / ratio);
+        } else if (view.css.width === 'auto') {
+          height = view.css.height.toPx();
+          width = view.sWidth / view.sHeight * height;
+        } else if (view.css.height === 'auto') {
+          width = view.css.width.toPx();
+          height = view.sHeight / view.sWidth * width;
+        } else {
+          width = view.css.width.toPx();
+          height = view.css.height.toPx();
+        }
+        break;
       }
-      break;
-    }
-    default:
-      if (!(view.css.width && view.css.height)) {
-        console.error('You should set width and height');
-        return;
-      }
+      default:
+        if (!(view.css.width && view.css.height)) {
+          console.error('You should set width and height');
+          return;
+        }
 
-      width = formatToNum(view.css.width, view.parent, 'width');
-      height = formatToNum(view.css.height, view.parent, 'height');
+        width = formatToNum(view.css.width, view.parent, 'width');
+        height = formatToNum(view.css.height, view.parent, 'height');
 
-      break;
+        break;
     }
     // let x;
     // if (view.css && view.css.right) {
@@ -701,15 +702,15 @@ export default class Painter {
     // 平移画布left/top
     const align = view.css && view.css.align ? view.css.align : (view.css && view.css.right ? 'right' : 'left');
     switch (align) {
-    case 'center':
-      this.ctx.translate(x, y + height / 2);
-      break;
-    case 'right':
-      this.ctx.translate(x - width / 2, y + height / 2);
-      break;
-    default:
-      this.ctx.translate(x + width / 2, y + height / 2);
-      break;
+      case 'center':
+        this.ctx.translate(x, y + height / 2);
+        break;
+      case 'right':
+        this.ctx.translate(x - width / 2, y + height / 2);
+        break;
+      default:
+        this.ctx.translate(x + width / 2, y + height / 2);
+        break;
     }
     // debugger;
     // 旋转角度
@@ -938,15 +939,15 @@ export default class Painter {
         }
         let x;
         switch (view.css.textAlign) {
-        case 'center':
-          x = 0;
-          break;
-        case 'right':
-          x = (width / 2);
-          break;
-        default:
-          x = -(width / 2);
-          break;
+          case 'center':
+            x = 0;
+            break;
+          case 'right':
+            x = (width / 2);
+            break;
+          default:
+            x = -(width / 2);
+            break;
         }
         const y = -(height / 2) + (lineIndex === 0 ? view.css.fontSize.toPx() : (view.css.fontSize.toPx() + lineIndex * lineHeight));
         lineIndex++;

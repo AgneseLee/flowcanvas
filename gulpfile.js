@@ -109,14 +109,6 @@ const CopyJs = () => {
     .pipe(gulp.dest(distPath));
 };
 
-const compileJsx = () => {
-  return gulp.src(jsxFiles)
-    .pipe(react({
-      es6module: true, // 这里必须要添加该配置项，不然会报Illegal import declaration
-    }))
-    .pipe(gulp.dest(distPath));
-};
-
 const CopyWxss = () => {
   return gulp.src(wxssFiles, { since: gulp.lastRun(CopyWxss), ignore: ignoreFiles })
     .pipe(gulp.dest(distPath));

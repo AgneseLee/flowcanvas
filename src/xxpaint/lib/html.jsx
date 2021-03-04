@@ -12,37 +12,6 @@ function h(nodeName, attributes, ...args) {
   }
   return { name: nodeName, attributes, children };
 }
-
-const flag = 2;
-let showCode;
-if (flag === 3) {
-  showCode = (
-    <rect class="container">
-      <text class="text color1">子节点1-1</text>
-      <text class="text color2">子节点1-2</text>
-      <text class="text color3">子节点1-3</text>
-      <text class="text color4">子节点1-4</text>
-      <text class="text color5">子节点1-5</text>
-    </rect>
-  );
-} else if (flag === 2) {
-  showCode = <image class="img" src="/pages/palette/default_goods.png"></image>;
-} else {
-  showCode = <text class="text2">block子节点4-1</text>;
-}
-
-const App = (
-  <rect class="wrapper">
-    {showCode}
-    <block class="bloo">
-      <text class="text2">block子节点4-1</text>
-      <text class="text2">block子节点4-2</text>
-    </block>
-    <rect class="container transparent"></rect>
-  </rect>
-);
-console.log("ppp ", App);
-
 const style = {
   wrapper: {
     // background: '#FEFDFD',
@@ -149,5 +118,59 @@ const style = {
   color4: { background: "#9BCD9B" },
   color5: { background: "#FF8247" },
 };
+// function hTree(style) {
+//   return function (nodeName, attributes, ...args) {
+//     const children = args.length ? [].concat(...args) : null;
+//     // console.log(typeof nodeName);
+//     // bugfix: 函数命名组件
+//     // 如：
+//     //   function Toolbar() {
+//     //     return <div>mmmm</div>;
+//     //   }
+//     if (typeof nodeName === "function") {
+//       return nodeName();
+//     }
+//     const classNameArr = attributes.class && attributes.class.split(" ");
+//     let css = {};
+//     if (classNameArr && classNameArr.length > 0) {
+//       console.log("33 ", classNameArr, style);
+//       css = classNameArr.map((name) => style[name]);
+//       css = css[0];
+//     }
+//     return { name: nodeName, attributes, children, css };
+//   };
+// }
+// const h = hTree(style);
+
+const flag = 2;
+let showCode;
+if (flag === 3) {
+  showCode = (
+    <rect class="container">
+      <text class="text color1">子节点1-1</text>
+      <text class="text color2">子节点1-2</text>
+      <text class="text color3">子节点1-3</text>
+      <text class="text color4">子节点1-4</text>
+      <text class="text color5">子节点1-5</text>
+    </rect>
+  );
+} else if (flag === 2) {
+  showCode = <image class="img" src="/pages/palette/default_goods.png"></image>;
+} else {
+  showCode = <text class="text2">block子节点4-1</text>;
+}
+
+const App = (
+  <rect class="wrapper">
+    {showCode}
+    <block class="bloo">
+      <text class="text2">block子节点4-1</text>
+      <text class="text2">block子节点4-2</text>
+    </block>
+    <rect class="container transparent"></rect>
+  </rect>
+);
+console.log("ppp ", App);
+
 module.exports.wxml = App;
 module.exports.style = style;

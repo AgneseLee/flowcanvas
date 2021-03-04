@@ -46,13 +46,10 @@ Component({
   },
 
   data: {
-    picURL: '',
-    showCanvas: true,
     painterStyle: '',
     outputPic: '',
     caniuse: false,
     realAllH: 0,
-    realWhiteH: 0,
     canvasNode: {},
     canvasCtx: {},
     pen: {},

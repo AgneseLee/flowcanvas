@@ -31,7 +31,7 @@ export const createVnode = (node) => {
  * @param {Vnode} el
  */
 
-export const connectChildren = (el, isRoot = false) => {
+export const _connectChildren = (el, isRoot = false) => {
   // debugger
   if (hasChildren(el)) {
     _getChildren(el).forEach((child, index) => {
@@ -48,7 +48,7 @@ export const connectChildren = (el, isRoot = false) => {
         isRoot = false;
         // 设置了上一个兄弟节点
         _setSibling(child, _getChildren(el)[index - 1], _getChildren(el)[index + 1]);
-        connectChildren(child, isRoot);
+        _connectChildren(child, isRoot);
       }
     });
   }
@@ -72,7 +72,7 @@ export const initVnodeTree = (node) => {
     }
   }
   // 关联父子兄弟节点和样式继承
-  connectChildren(node);
+  _connectChildren(node);
   console.log('vnodeTree is: ', node);
   return node;
 };
@@ -148,7 +148,7 @@ function _formatVnode2(xom, style) {
     createVnode(node);
   });
   // 关联父子兄弟节点和样式继承
-  connectChildren(xom);
+  _connectChildren(xom);
 }
 
 function _formatVnode(xom, style) {
@@ -176,7 +176,7 @@ function _formatVnode(xom, style) {
     createVnode(node);
   });
   // 关联父子兄弟节点和样式继承
-  connectChildren(xom);
+  _connectChildren(xom);
 }
 
 /**
